@@ -576,7 +576,7 @@ def run():
         listing_model_access.create_listing(charrington, listing)
         listing_model_access.submit_listing(charrington, listing)
         listing_model_access.approve_listing_by_org_steward(emmanuel, listing)
-        listing_model_access.approve_listing(big_brother_2, listing)
+        listing_model_access.approve_listing(big_brother2, listing)
 
         ############################################################################
         #                           Bread Basket
@@ -698,7 +698,7 @@ def run():
         listing_model_access.create_listing(aaronson, listing)
         listing_model_access.submit_listing(aaronson, listing)
         listing_model_access.approve_listing_by_org_steward(emmanuel, listing)
-        listing_model_access.approve_listing(big_brother_2, listing)
+        listing_model_access.approve_listing(big_brother2, listing)
 
         ############################################################################
         #                           Chatter Box
@@ -809,7 +809,7 @@ def run():
         listing_model_access.create_listing(charrington, listing)
         listing_model_access.submit_listing(charrington, listing)
         listing_model_access.approve_listing_by_org_steward(emmanuel, listing)
-        listing_model_access.approve_listing(big_brother_2, listing)
+        listing_model_access.approve_listing(big_brother2, listing)
 
         ############################################################################
         #                           FrameIt
@@ -865,7 +865,7 @@ def run():
         listing_model_access.create_listing(jones, listing)
         listing_model_access.submit_listing(jones, listing)
         listing_model_access.approve_listing_by_org_steward(winston, listing)
-        listing_model_access.approve_listing(big_brother_2, listing)
+        listing_model_access.approve_listing(big_brother2, listing)
 
         ############################################################################
         #                           Hatch Latch
