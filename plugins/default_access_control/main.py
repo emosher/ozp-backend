@@ -2,19 +2,19 @@
 Access control utilities
 
 An access control is a marking that complies with the structure described here:
-https://www.fas.org/sgp/othergov/intel/capco_reg.pdf
+ http://www.ncsc.gov/training/WBT/docs/CM_AltText_021312.pdf
+ http://www.ncsc.gov/training/resources/Public_CAPCO%20Manual_v2.1.pdf
+ http://www.ncsc.gov/training/resources/Publically%20Releasable%20Register.pdf
+ https://www.nsa.gov/public_info/_files/nsacss_policies/Policy_Manual_1-52.pdf
+ http://www.dtic.mil/whs/directives/corres/pdf/520001_vol2.pdf
+ https://www.cia.gov/library/publications/the-world-factbook/print/print_AppendixD.pdf
 
 For example:
-    SECRET//ABC//XYZ//USA or TOP SECRET or UNCLASSIFIED//FOUO
+    UNCLASSIFIED//FOUO
 
 Classification Validation:
     A string is made of tokens separated by a delimiter
 
-'SECRET//ABC//XYZ//USA'  is made of 4 tokens  [ Token(SECRET), Token(ABC), Token(XYZ), Token(USA) ]
-
-This simple logic is this: for a user to have access:
-    1. They must have a classification equal to or higher than that required
-    2. They must have at least all controls that are required (in any order)
 """
 import json
 import logging
@@ -120,51 +120,6 @@ class PluginMain(object):
 
     def has_access(self, user_accesses_json, marking):
         return True
-
-    def future_has_access(self, user_accesses_json, marking):
-        """
-        Determine if a user has access to a given access control
-
-        Ultimately, this will likely invoke a separate service to do the check.
-        For now, some basic logic will suffice
-
-        Assume the access control is of the format:
-        <CLASSIFICATION>//<CONTROL>//<CONTROL>//...
-
-        i.e.: a single classification followed by additional marking categories
-        separated by //
-
-        Args:
-            user_accesses_json (string): user accesses in json (clearances, formal_accesses, visas)
-            marking: a valid (string): a valid security marking
-        """
-        if not marking:
-            return False
-        markings = marking.split('//')
-        # get the user's access_control data
-        try:
-            user_accesses = json.loads(user_accesses_json)
-        except ValueError:
-            logger.error('Error parsing JSON data: {0!s}'.format(user_accesses_json))
-            return False
-
-        # check clearances
-        clearances = user_accesses['clearances']
-        required_clearance = markings[0]
-
-        if required_clearance not in clearances:
-            return False
-
-        # just combine all of the user's formal accesses and visas
-        user_controls = user_accesses['formal_accesses']
-        user_controls += user_accesses['visas']
-
-        required_controls = markings[1:]
-        missing_controls = [i for i in required_controls if i not in user_controls]
-        if not missing_controls:
-            return True
-        else:
-            return False
 
     def validate_marking(self, marking):
         """

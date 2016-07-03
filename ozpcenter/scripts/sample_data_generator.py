@@ -39,17 +39,8 @@ def run():
     #                           Security Markings
     ############################################################################
     unclass = 'UNCLASSIFIED'
-    secret = 'SECRET'
-    secret_n = 'SECRET//NOVEMBER'
-    ts = 'TOP SECRET'
-    ts_s = 'TOP SECRET//SIERRA'
-    ts_st = 'TOP SECRET//SIERRA//TANGO'
-    ts_stgh = 'TOP SECRET//SIERRA//TANGO//GOLF//HOTEL'
-
-    ts_n = 'TOP SECRET//NOVEMBER'
-    ts_sn = 'TOP SECRET//SIERRA//NOVEMBER'
-    ts_stn = 'TOP SECRET//SIERRA//TANGO//NOVEMBER'
-    ts_stghn = 'TOP SECRET//SIERRA//TANGO//GOLF//HOTEL//NOVEMBER'
+    abcde = 'UNCLASSIFIED//ABCDE'
+    gthruz = 'UNCLASSIFIED//G-Z'
 
     ############################################################################
     #                           Categories
@@ -159,7 +150,7 @@ def run():
     # TODO: more realistic data
     img = Image.open(TEST_IMG_PATH + 'android.png')
     icon = models.Image.create_image(img, file_extension='png',
-        security_marking='UNCLASSIFIED', image_type=intent_icon_type.name)
+        security_marking=unclass, image_type=intent_icon_type.name)
     i = models.Intent(action='/application/json/view',
         media_type='vnd.ozp-intent-v1+json.json',
         label='view',
@@ -177,28 +168,28 @@ def run():
     ############################################################################
     img = Image.open(TEST_IMG_PATH + 'ministry_of_truth.jpg')
     icon = models.Image.create_image(img, file_extension='jpg',
-        security_marking='UNCLASSIFIED', image_type='agency_icon')
+        security_marking=unclass, image_type='agency_icon')
     minitrue = models.Agency(title='Ministry of Truth', short_name='Minitrue',
         icon=icon)
     minitrue.save()
 
     img = Image.open(TEST_IMG_PATH + 'ministry_of_peace.png')
     icon = models.Image.create_image(img, file_extension='png',
-        security_marking='UNCLASSIFIED', image_type='agency_icon')
+        security_marking=unclass, image_type='agency_icon')
     minipax = models.Agency(title='Ministry of Peace', short_name='Minipax',
         icon=icon)
     minipax.save()
 
     img = Image.open(TEST_IMG_PATH + 'ministry_of_love.jpeg')
     icon = models.Image.create_image(img, file_extension='jpeg',
-        security_marking='UNCLASSIFIED', image_type='agency_icon')
+        security_marking=unclass, image_type='agency_icon')
     miniluv = models.Agency(title='Ministry of Love', short_name='Miniluv',
         icon=icon)
     miniluv.save()
 
     img = Image.open(TEST_IMG_PATH + 'ministry_of_plenty.png')
     icon = models.Image.create_image(img, file_extension='png',
-        security_marking='UNCLASSIFIED', image_type='agency_icon')
+        security_marking=unclass, image_type='agency_icon')
     miniplenty = models.Agency(title='Ministry of Plenty',
         short_name='Miniplen', icon=icon)
     miniplenty.save()
@@ -215,9 +206,9 @@ def run():
     #                               Org Stewards
     ############################################################################
     access_control = json.dumps({
-        'clearances': ['UNCLASSIFIED', 'CONFIDENTIAL', 'SECRET', 'TOP SECRET'],
-        'formal_accesses': ['SIERRA', 'TANGO'],
-        'visas': ['NOVEMBER']
+        'clearances': [unclass],
+        'formal_accesses': [gthruz],
+        'visas': ['']
     })
     winston = models.Profile.create_user('wsmith',
         email='wsmith@oceania.gov',
@@ -231,8 +222,8 @@ def run():
     )
 
     access_control = json.dumps({
-        'clearances': ['UNCLASSIFIED', 'CONFIDENTIAL', 'SECRET', 'TOP SECRET'],
-        'formal_accesses': ['SIERRA'],
+        'clearances': [unclass],
+        'formal_accesses': [gthruz],
         'visas': []
     })
     julia = models.Profile.create_user('julia',
@@ -247,9 +238,9 @@ def run():
     )
 
     access_control = json.dumps({
-        'clearances': ['UNCLASSIFIED', 'CONFIDENTIAL', 'SECRET', 'TOP SECRET'],
-        'formal_accesses': ['SIERRA', 'TANGO', 'GOLF', 'HOTEL'],
-        'visas': ['NOVEMBER']
+        'clearances': [unclass],
+        'formal_accesses': [gthruz],
+        'visas': []
     })
     obrien = models.Profile.create_user('obrien',
         email='obrien@oceania.gov',
@@ -262,29 +253,32 @@ def run():
         dn='OBrien obrien'
     )
 
+
+    access_control = json.dumps({
+        'clearances': [unclass],
+        'formal_accesses': [abcde],
+        'visas': []
+    })
+    emmanuel = models.Profile.create_user('emmanuel',
+        email='emmanuel@oceania.gov',
+        display_name='Emmanuel',
+        bio='Heard but not seen',
+        access_control=access_control,
+        organizations=['Ministry of Peace'],
+        stewarded_organizations=['Ministry of Peace', 'Ministry of Plenty',
+                                 'Ministry of Truth', 'Ministry of Love'],
+        groups=['ORG_STEWARD'],
+        dn='Emmanuel emmanuel'
+    )
+
     ############################################################################
     #                               Apps Mall Stewards
     ############################################################################
 
     access_control = json.dumps({
-        'clearances': ['UNCLASSIFIED', 'CONFIDENTIAL', 'SECRET', 'TOP SECRET'],
-        'formal_accesses': ['SIERRA', 'TANGO', 'GOLF', 'HOTEL'],
-        'visas': ['DRS']
-    })
-    khaleesi = models.Profile.create_user('khaleesi',
-        email='khaleesi@dragonborn.gov',
-        display_name='Daenerys Targaryen',
-        bio='I am Queen of Meereen, Queen of the Andals(, the Rhoynar) and the First Men, Lady Regnant of the Seven Kingdoms, Khaleesi of the Great Grass Sea, Mhysa, Breaker of Chains, the Unburnt, Mother of Dragons".',
-        access_control=access_control,
-        organizations=['Ministry of Peace'],
-        groups=['APPS_MALL_STEWARD'],
-        dn='Daenerys Targaryen khaleesi'
-    )
-
-    access_control = json.dumps({
-        'clearances': ['UNCLASSIFIED', 'CONFIDENTIAL', 'SECRET', 'TOP SECRET'],
-        'formal_accesses': ['SIERRA', 'TANGO', 'GOLF', 'HOTEL'],
-        'visas': ['NOVEMBER']
+        'clearances': [unclass],
+        'formal_accesses': [abcde, gthruz],
+        'visas': []
     })
     big_brother = models.Profile.create_user('bigbrother',
         email='bigbrother@oceania.gov',
@@ -297,9 +291,9 @@ def run():
     )
 
     access_control = json.dumps({
-        'clearances': ['UNCLASSIFIED', 'CONFIDENTIAL', 'SECRET', 'TOP SECRET'],
-        'formal_accesses': ['SIERRA', 'TANGO', 'GOLF', 'HOTEL'],
-        'visas': ['NOVEMBER']
+        'clearances': [unclass],
+        'formal_accesses': [abcde],
+        'visas': []
     })
     big_brother2 = models.Profile.create_user('bigbrother2',
         email='bigbrother2@oceania.gov',
@@ -316,9 +310,9 @@ def run():
     ############################################################################
 
     access_control = json.dumps({
-        'clearances': ['UNCLASSIFIED', 'CONFIDENTIAL', 'SECRET'],
-        'formal_accesses': [],
-        'visas': ['NOVEMBER']
+        'clearances': [unclass],
+        'formal_accesses': [abcde],
+        'visas': []
     })
     aaronson = models.Profile.create_user('aaronson',
         email='aaronson@airstripone.com',
@@ -331,24 +325,9 @@ def run():
     )
 
     access_control = json.dumps({
-        'clearances': ['UNCLASSIFIED', 'CONFIDENTIAL', 'SECRET'],
-        'formal_accesses': [],
-        'visas': ['STE', 'RVR']
-    })
-    hodor = models.Profile.create_user('hodor',
-        email='hodor@hodor.hodor',
-        display_name='Hodor',
-        bio='Hold the door',
-        access_control=access_control,
-        organizations=['Ministry of Love'],
-        groups=['USER'],
-        dn='Hodor hodor'
-    )
-
-    access_control = json.dumps({
-        'clearances': ['UNCLASSIFIED', 'CONFIDENTIAL', 'SECRET'],
-        'formal_accesses': [],
-        'visas': ['NOVEMBER']
+        'clearances': [unclass],
+        'formal_accesses': [gthruz],
+        'visas': []
     })
     jones = models.Profile.create_user('jones',
         email='jones@airstripone.com',
@@ -361,8 +340,8 @@ def run():
     )
 
     access_control = json.dumps({
-        'clearances': ['UNCLASSIFIED', 'CONFIDENTIAL', 'SECRET'],
-        'formal_accesses': [],
+        'clearances': [unclass],
+        'formal_accesses': [gthruz],
         'visas': []
     })
     rutherford = models.Profile.create_user('rutherford',
@@ -376,8 +355,8 @@ def run():
     )
 
     access_control = json.dumps({
-        'clearances': ['UNCLASSIFIED', 'CONFIDENTIAL', 'SECRET', 'TOP SECRET'],
-        'formal_accesses': ['SIERRA'],
+        'clearances': [unclass],
+        'formal_accesses': [gthruz],
         'visas': []
     })
     syme = models.Profile.create_user('syme',
@@ -391,8 +370,8 @@ def run():
     )
 
     access_control = json.dumps({
-        'clearances': ['UNCLASSIFIED'],
-        'formal_accesses': [],
+        'clearances': [unclass],
+        'formal_accesses': [gthruz],
         'visas': []
     })
     tparsons = models.Profile.create_user('tparsons',
@@ -407,32 +386,17 @@ def run():
 
 
     access_control = json.dumps({
-        'clearances': ['UNCLASSIFIED'],
-        'formal_accesses': [],
-        'visas': ['TWN']
-    })
-    jsnow = models.Profile.create_user('jsnow',
-        email='jsnow@forthewatch.com',
-        display_name='Jon Snow',
-        bio='I know nothing.',
-        access_control=access_control,
-        organizations=['Ministry of Peace', 'Ministry of Love'],
-        groups=['USER'],
-        dn='Jonsnow jsnow'
-    )
-
-    access_control = json.dumps({
-        'clearances': ['UNCLASSIFIED', 'CONFIDENTIAL', 'SECRET', 'TOP SECRET'],
-        'formal_accesses': ['SIERRA', 'TANGO', 'GOLF', 'HOTEL'],
-        'visas': ['NOVEMBER']
+        'clearances': [unclass],
+        'formal_accesses': [abcde],
+        'visas': []
     })
     charrington = models.Profile.create_user('charrington',
         email='charrington@airstripone.com',
         display_name='Charrington',
         bio='A member of the Thought Police',
         access_control=access_control,
-        organizations=['Ministry of Peace', 'Ministry of Love',
-        'Ministry of Truth'],
+        organizations=['Ministry of Peace', 'Ministry of Truth',
+                       'Ministry of Plenty'],
         groups=['USER'],
         dn='Charrington charrington'
     )
@@ -536,7 +500,7 @@ def run():
             is_enabled=True,
             is_featured=True,
             iframe_compatible=False,
-            security_marking=unclass
+            security_marking=abcde
         )
         listing.save()
         # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -548,7 +512,7 @@ def run():
         # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         #                           Owners
         # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        listing.owners.add(winston)
+        listing.owners.add(charrington)
         # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         #                           Categories
         # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -581,7 +545,7 @@ def run():
         #                           Notifications
         # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         notification1 = models.Notification(message='Air Mail update next week',
-            expires_date=next_week, listing=listing, author=winston)
+            expires_date=next_week, listing=listing, author=charrington)
         notification1.save()
 
         # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -591,11 +555,11 @@ def run():
             listing, 5,
             text="This app is great - well designed and easy to use")
 
-        listing_model_access.create_listing_review(tparsons.user.username,
+        listing_model_access.create_listing_review(emmanuel.user.username,
             listing, 3,
             text="Air mail is ok - does what it says and no more")
 
-        listing_model_access.create_listing_review(syme.user.username,
+        listing_model_access.create_listing_review(aaronson.user.username,
             listing, 1,
             text="Air mail crashes all the time - it doesn't even support IE 6!")
 
@@ -609,10 +573,10 @@ def run():
             listing=listing)
         guide.save()
 
-        listing_model_access.create_listing(winston, listing)
-        listing_model_access.submit_listing(winston, listing)
-        listing_model_access.approve_listing_by_org_steward(winston, listing)
-        listing_model_access.approve_listing(winston, listing)
+        listing_model_access.create_listing(charrington, listing)
+        listing_model_access.submit_listing(charrington, listing)
+        listing_model_access.approve_listing_by_org_steward(emmanuel, listing)
+        listing_model_access.approve_listing(big_brother_2, listing)
 
         ############################################################################
         #                           Bread Basket
@@ -655,30 +619,30 @@ def run():
             is_featured=True,
             iframe_compatible=False,
             is_private=True,
-            security_marking=unclass
+            security_marking=abcde
         )
         listing.save()
 
         listing.contacts.add(osha)
-        listing.owners.add(julia)
+        listing.owners.add(emmanuel)
         listing.categories.add(health_fitness)
         listing.categories.add(shopping)
 
         listing.tags.add(demo)
         listing.tags.add(example)
 
-        listing_model_access.create_listing_review(jones.user.username,
+        listing_model_access.create_listing_review(aaronson.user.username,
             listing, 2,
             text="This bread is stale!")
 
-        listing_model_access.create_listing_review(julia.user.username,
+        listing_model_access.create_listing_review(charrington.user.username,
             listing, 5,
             text="Yum!")
 
-        listing_model_access.create_listing(julia, listing)
-        listing_model_access.submit_listing(julia, listing)
-        listing_model_access.approve_listing_by_org_steward(winston, listing)
-        listing_model_access.approve_listing(winston, listing)
+        listing_model_access.create_listing(emmanuel, listing)
+        listing_model_access.submit_listing(emmanuel, listing)
+        listing_model_access.approve_listing_by_org_steward(emmanuel, listing)
+        listing_model_access.approve_listing(big_brother, listing)
 
         ############################################################################
         #                           Chart Course
@@ -705,7 +669,7 @@ def run():
 
         listing = models.Listing(
             title='Chart Course{0!s}'.format(postfix_space),
-            agency=minitrue,
+            agency=miniluv,
             listing_type=web_app,
             description='Chart your course',
             launch_url='{0!s}/demo_apps/centerSampleListings/chartCourse/index.html'.format(DEMO_APP_ROOT),
@@ -722,19 +686,19 @@ def run():
             is_featured=True,
             iframe_compatible=False,
             is_private=False,
-            security_marking=unclass
+            security_marking=abcde
         )
         listing.save()
         listing.contacts.add(rob_baratheon)
-        listing.owners.add(winston)
+        listing.owners.add(aaronson)
         listing.categories.add(tools)
         listing.categories.add(education)
         listing.tags.add(demo)
 
-        listing_model_access.create_listing(winston, listing)
-        listing_model_access.submit_listing(winston, listing)
-        listing_model_access.approve_listing_by_org_steward(winston, listing)
-        listing_model_access.approve_listing(winston, listing)
+        listing_model_access.create_listing(aaronson, listing)
+        listing_model_access.submit_listing(aaronson, listing)
+        listing_model_access.approve_listing_by_org_steward(emmanuel, listing)
+        listing_model_access.approve_listing(big_brother_2, listing)
 
         ############################################################################
         #                           Chatter Box
@@ -778,18 +742,18 @@ def run():
             is_featured=True,
             iframe_compatible=False,
             is_private=False,
-            security_marking=unclass
+            security_marking=abcde
         )
         listing.save()
         listing.contacts.add(rob_baratheon)
-        listing.owners.add(julia)
+        listing.owners.add(aaronson)
         listing.categories.add(communication)
         listing.tags.add(demo)
 
-        listing_model_access.create_listing(julia, listing)
-        listing_model_access.submit_listing(julia, listing)
-        listing_model_access.approve_listing_by_org_steward(winston, listing)
-        listing_model_access.approve_listing(winston, listing)
+        listing_model_access.create_listing(aaronson, listing)
+        listing_model_access.submit_listing(aaronson, listing)
+        listing_model_access.approve_listing_by_org_steward(emmanuel, listing)
+        listing_model_access.approve_listing(big_brother, listing)
 
         ############################################################################
         #                           Clipboard
@@ -833,19 +797,19 @@ def run():
             is_featured=True,
             iframe_compatible=False,
             is_private=False,
-            security_marking=unclass
+            security_marking=abcde
         )
         listing.save()
         listing.contacts.add(rob_baratheon)
-        listing.owners.add(winston)
+        listing.owners.add(charrington)
         listing.categories.add(tools)
         listing.categories.add(education)
         listing.tags.add(demo)
 
-        listing_model_access.create_listing(winston, listing)
-        listing_model_access.submit_listing(winston, listing)
-        listing_model_access.approve_listing_by_org_steward(winston, listing)
-        listing_model_access.approve_listing(winston, listing)
+        listing_model_access.create_listing(charrington, listing)
+        listing_model_access.submit_listing(charrington, listing)
+        listing_model_access.approve_listing_by_org_steward(emmanuel, listing)
+        listing_model_access.approve_listing(big_brother_2, listing)
 
         ############################################################################
         #                           FrameIt
@@ -893,15 +857,15 @@ def run():
         )
         listing.save()
         listing.contacts.add(rob_baratheon)
-        listing.owners.add(winston)
+        listing.owners.add(jones)
         listing.categories.add(tools)
         listing.categories.add(education)
         listing.tags.add(demo)
 
-        listing_model_access.create_listing(winston, listing)
-        listing_model_access.submit_listing(winston, listing)
+        listing_model_access.create_listing(jones, listing)
+        listing_model_access.submit_listing(jones, listing)
         listing_model_access.approve_listing_by_org_steward(winston, listing)
-        listing_model_access.approve_listing(winston, listing)
+        listing_model_access.approve_listing(big_brother_2, listing)
 
         ############################################################################
         #                           Hatch Latch
@@ -945,7 +909,7 @@ def run():
             is_featured=True,
             iframe_compatible=False,
             is_private=False,
-            security_marking=unclass
+            security_marking=gthruz
         )
         listing.save()
         listing.contacts.add(rob_baratheon)
@@ -958,7 +922,7 @@ def run():
         listing_model_access.create_listing(winston, listing)
         listing_model_access.submit_listing(winston, listing)
         listing_model_access.approve_listing_by_org_steward(winston, listing)
-        listing_model_access.approve_listing(winston, listing)
+        listing_model_access.approve_listing(big_brother, listing)
 
         ############################################################################
         #                           Jot Spot
@@ -1002,7 +966,7 @@ def run():
             is_featured=True,
             iframe_compatible=False,
             is_private=False,
-            security_marking=unclass
+            security_marking=gthruz
         )
         listing.save()
         listing.contacts.add(rob_baratheon)
@@ -1014,9 +978,9 @@ def run():
         listing_model_access.create_listing(winston, listing)
         listing_model_access.submit_listing(winston, listing)
         listing_model_access.approve_listing_by_org_steward(winston, listing)
-        listing_model_access.approve_listing(winston, listing)
+        listing_model_access.approve_listing(big_brother, listing)
 
-        listing_model_access.create_listing_review(charrington.user.username,
+        listing_model_access.create_listing_review(jones.user.username,
             listing, 4,
             text="I really like it")
 
@@ -1062,7 +1026,7 @@ def run():
             is_featured=True,
             iframe_compatible=False,
             is_private=False,
-            security_marking=unclass
+            security_marking=gthruz
         )
         listing.save()
         listing.contacts.add(rob_baratheon)
@@ -1074,7 +1038,7 @@ def run():
         listing_model_access.create_listing(winston, listing)
         listing_model_access.submit_listing(winston, listing)
         listing_model_access.approve_listing_by_org_steward(winston, listing)
-        listing_model_access.approve_listing(winston, listing)
+        listing_model_access.approve_listing(big_brother, listing)
 
         ############################################################################
         #                           Location Viewer
@@ -1118,7 +1082,7 @@ def run():
             is_featured=True,
             iframe_compatible=False,
             is_private=False,
-            security_marking=unclass
+            security_marking=gthruz
         )
         listing.save()
         listing.contacts.add(rob_baratheon)
@@ -1130,7 +1094,7 @@ def run():
         listing_model_access.create_listing(winston, listing)
         listing_model_access.submit_listing(winston, listing)
         listing_model_access.approve_listing_by_org_steward(winston, listing)
-        listing_model_access.approve_listing(winston, listing)
+        listing_model_access.approve_listing(big_brother, listing)
 
         ############################################################################
         #                           Location Analyzer
@@ -1174,7 +1138,7 @@ def run():
             is_featured=True,
             iframe_compatible=False,
             is_private=False,
-            security_marking=unclass
+            security_marking=gthruz
         )
         listing.save()
         listing.contacts.add(rob_baratheon)
@@ -1186,19 +1150,19 @@ def run():
         listing_model_access.create_listing(winston, listing)
         listing_model_access.submit_listing(winston, listing)
         listing_model_access.approve_listing_by_org_steward(winston, listing)
-        listing_model_access.approve_listing(winston, listing)
+        listing_model_access.approve_listing(big_brother, listing)
 
     ############################################################################
     #                           Library
     ############################################################################
     # bookmark listings
     library_entry = models.ApplicationLibraryEntry(
-        owner=winston,
+        owner=aaronson,
         listing=models.Listing.objects.get(unique_name='ozp.test.bread_basket'))
     library_entry.save()
 
     library_entry = models.ApplicationLibraryEntry(
-        owner=winston,
+        owner=aaronson,
         listing=models.Listing.objects.get(unique_name='ozp.test.air_mail'))
     library_entry.save()
 
