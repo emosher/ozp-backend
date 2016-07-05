@@ -16,7 +16,6 @@ Classification Validation:
     A string is made of tokens separated by a delimiter
 
 """
-import json
 import logging
 
 from . import tokens as all_tokens
