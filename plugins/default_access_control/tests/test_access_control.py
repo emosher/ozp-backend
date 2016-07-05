@@ -1,8 +1,6 @@
 """
 Tests for access control utility functions
 """
-import json
-
 from django.test import TestCase
 
 from plugins.default_access_control.main import PluginMain
