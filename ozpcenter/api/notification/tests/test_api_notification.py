@@ -59,7 +59,7 @@ class NotificationApiTest(APITestCase):
         response = self.client.get(url, format='json')
         default_ids = [record['id'] for record in response.data]
 
-        self.assertEqual(default_ids, [5, 2, 1])
+        self.assertEqual(default_ids, [2, 1])
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         url = '/api/self/notification/?ordering=-created_date'
@@ -91,7 +91,7 @@ class NotificationApiTest(APITestCase):
         for i in response.data:
             notification_ids.append(i['id'])
 
-        self.assertEqual(3, len(notification_ids))
+        self.assertEqual(2, len(notification_ids))
 
         # now dismiss the first notification
         dismissed_notification_id = notification_ids[0]
@@ -106,7 +106,7 @@ class NotificationApiTest(APITestCase):
         for i in response.data:
             notification_ids.append(i['id'])
 
-        self.assertEqual(2, len(notification_ids))
+        self.assertEqual(1, len(notification_ids))
         self.assertTrue(notification_ids[0] != dismissed_notification_id)
 
     def test_get_pending_notifications(self):

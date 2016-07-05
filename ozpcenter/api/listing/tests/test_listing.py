@@ -111,7 +111,7 @@ class ListingTest(TestCase):
         self.assertEqual(air_mail.last_activity, modified_activity)
 
     def test_submit_listing(self):
-        author = generic_model_access.get_profile('wsmith')
+        author = generic_model_access.get_profile('charrington')
         air_mail = models.Listing.objects.for_user(author.user.username).get(
             title='Air Mail')
 
@@ -129,7 +129,7 @@ class ListingTest(TestCase):
             author.user.username)
 
     def test_approve_listing_by_org_steward(self):
-        org_steward = generic_model_access.get_profile('wsmith')
+        org_steward = generic_model_access.get_profile('emmanuel')
         username = org_steward.user.username
         air_mail = models.Listing.objects.for_user(username).get(
             title='Air Mail')
@@ -147,7 +147,7 @@ class ListingTest(TestCase):
         self.assertEqual(approved_org_activity.author.user.username, username)
 
     def test_approve_listing(self):
-        apps_mall_steward = generic_model_access.get_profile('wsmith')
+        apps_mall_steward = generic_model_access.get_profile('bigbrother2')
         username = apps_mall_steward.user.username
         air_mail = models.Listing.objects.for_user(username).get(
             title='Air Mail')
@@ -406,7 +406,7 @@ class ListingTest(TestCase):
 
         owners = models.Profile.objects.filter(user__username__istartswith='j')
         out = model_access.owners_to_string(owners, True)
-        self.assertEqual(out, "['jones', 'jsnow', 'julia']")
+        self.assertEqual(out, "['jones', 'julia']")
 
     def test_put_counts_in_listings_endpoint(self):
         queryset = models.Listing.objects.all()

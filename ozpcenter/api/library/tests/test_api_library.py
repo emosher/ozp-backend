@@ -69,7 +69,7 @@ class LibraryApiTest(APITestCase):
         """
         GET /self/library
         """
-        user = generic_model_access.get_profile('wsmith').user
+        user = generic_model_access.get_profile('aaronson').user
         self.client.force_authenticate(user=user)
         url = '/api/self/library/'
         response = self.client.get(url, format='json')
@@ -103,10 +103,11 @@ class LibraryApiTest(APITestCase):
         """
         GET /self/library
         """
-        user = generic_model_access.get_profile('wsmith').user
+        user = generic_model_access.get_profile('aaronson').user
         self.client.force_authenticate(user=user)
         url = '/api/self/library/'
         response = self.client.get(url, format='json')
+        # print('response.data: %s' % response.data)
         listing_ids = [record['listing']['id'] for record in response.data]
         first_listing_id = listing_ids[0]  # Should be 2
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -115,7 +116,7 @@ class LibraryApiTest(APITestCase):
         # Get Library for current user after listing was disabled
         self._edit_listing(first_listing_id, {'is_enabled': False})
 
-        user = generic_model_access.get_profile('wsmith').user
+        user = generic_model_access.get_profile('aaronson').user
         self.client.force_authenticate(user=user)
         url = '/api/self/library/'
         response = self.client.get(url, format='json')
@@ -126,7 +127,7 @@ class LibraryApiTest(APITestCase):
         # Get Library for current user after listing was Enable
         self._edit_listing(first_listing_id, {'is_enabled': True})
 
-        user = generic_model_access.get_profile('wsmith').user
+        user = generic_model_access.get_profile('aaronson').user
         self.client.force_authenticate(user=user)
         url = '/api/self/library/'
         response = self.client.get(url, format='json')
@@ -138,7 +139,7 @@ class LibraryApiTest(APITestCase):
         """
         GET /self/library
         """
-        user = generic_model_access.get_profile('wsmith').user
+        user = generic_model_access.get_profile('aaronson').user
         self.client.force_authenticate(user=user)
         url = '/api/self/library/?type=web application'
         response = self.client.get(url, format='json')
@@ -165,7 +166,7 @@ class LibraryApiTest(APITestCase):
         """
         GET /self/library/1
         """
-        user = generic_model_access.get_profile('wsmith').user
+        user = generic_model_access.get_profile('aaronson').user
         self.client.force_authenticate(user=user)
         url = '/api/self/library/1/'
         response = self.client.get(url, format='json')

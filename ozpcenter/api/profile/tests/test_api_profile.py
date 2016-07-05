@@ -60,8 +60,8 @@ class ProfileApiTest(APITestCase):
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         ids = [i['id'] for i in response.data]
-        self.assertTrue(1 in ids)
-        self.assertEquals(len(ids), 90)
+        self.assertTrue(8 in ids)
+        self.assertEquals(len(ids), 50)
 
     @patch('plugins_util.plugin_manager.requests.get', side_effect=helper.mocked_requests_get)
     def test_all_listing_for_self_profile_auth_enabled(self, mock_request):
@@ -83,11 +83,11 @@ class ProfileApiTest(APITestCase):
     def _one_listing_for_self_profile(self):
         user = generic_model_access.get_profile('wsmith').user
         self.client.force_authenticate(user=user)
-        url = '/api/profile/self/listing/1/'
+        url = '/api/profile/self/listing/7/'
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
-        self.assertEquals(data['id'], 1)
+        self.assertEquals(data['id'], 7)
 
     @patch('plugins_util.plugin_manager.requests.get', side_effect=helper.mocked_requests_get)
     def test_one_listing_for_self_profile_auth_enabled(self, mock_request):
@@ -107,13 +107,13 @@ class ProfileApiTest(APITestCase):
     def _all_listing_for_minitrue_profile_from_multi_org_profile(self):
         user = generic_model_access.get_profile('charrington').user
         self.client.force_authenticate(user=user)
-        url = '/api/profile/1/listing/'
+        url = '/api/profile/12/listing/'
         response = self.client.get(url, format='json')
         data = response.data
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         ids = [i['id'] for i in data]
-        self.assertTrue(110 in ids)
-        self.assertEquals(len(ids), 90)
+        self.assertTrue(27 in ids)
+        self.assertEquals(len(ids), 20)
 
     @patch('plugins_util.plugin_manager.requests.get', side_effect=helper.mocked_requests_get)
     def test_all_listing_for_minitrue_profile_from_multi_org_profile_auth_enabled(self, mock_request):
@@ -123,7 +123,7 @@ class ProfileApiTest(APITestCase):
         Getting
             wsmith (minitrue, stewarded_orgs: minitrue) - Winston Smith - 1
         From
-            charrington (minipax, miniluv, minitrue) - Charrington - 11
+            charrington (minipax, miniluv, minitrue) - Charrington - 12
         """
         settings.OZP['USE_AUTH_SERVER'] = True
         self._all_listing_for_minitrue_profile_from_multi_org_profile()
@@ -135,7 +135,7 @@ class ProfileApiTest(APITestCase):
         Getting
             wsmith (minitrue, stewarded_orgs: minitrue) - Winston Smith - 1
         From
-            charrington (minipax, miniluv, minitrue) - Charrington - 11
+            charrington (minipax, miniluv, minitrue) - Charrington - 12
         """
         settings.OZP['USE_AUTH_SERVER'] = False
         self._all_listing_for_minitrue_profile_from_multi_org_profile()
@@ -150,7 +150,7 @@ class ProfileApiTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         ids = [i['id'] for i in data]
         self.assertTrue(110 in ids)
-        self.assertEquals(len(ids), 90)
+        self.assertEquals(len(ids), 50)
 
     @patch('plugins_util.plugin_manager.requests.get', side_effect=helper.mocked_requests_get)
     def test_all_listing_for_app_profile_from_multi_org_profile_auth_enabled(self, mock_request):
@@ -160,7 +160,7 @@ class ProfileApiTest(APITestCase):
         Getting
             wsmith (minitrue, stewarded_orgs: minitrue) - Winston Smith - 1
         From
-            bigbrother (minipax) - Big Brother - 4
+            bigbrother (minipax) - Big Brother - 5
         """
         settings.OZP['USE_AUTH_SERVER'] = True
         self._all_listing_for_app_profile_from_multi_org_profile()
@@ -172,7 +172,7 @@ class ProfileApiTest(APITestCase):
         Getting
             wsmith (minitrue, stewarded_orgs: minitrue) - Winston Smith - 1
         From
-            bigbrother (minipax) - Big Brother - 4
+            bigbrother (minipax) - Big Brother - 5
         """
         settings.OZP['USE_AUTH_SERVER'] = False
         self._all_listing_for_app_profile_from_multi_org_profile()
@@ -180,12 +180,12 @@ class ProfileApiTest(APITestCase):
     def _all_listing_for_minitrue_profile_from_minitrue_profile(self):
         user = generic_model_access.get_profile('jones').user
         self.client.force_authenticate(user=user)
-        url = '/api/profile/2/listing/'
+        url = '/api/profile/8/listing/'
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
         ids = [i['id'] for i in data]
-        self.assertTrue(59 in ids)
+        self.assertTrue(50 in ids)
         self.assertEquals(len(ids), 10)
 
     @patch('plugins_util.plugin_manager.requests.get', side_effect=helper.mocked_requests_get)
@@ -196,7 +196,7 @@ class ProfileApiTest(APITestCase):
         Getting
             julia (minitrue, stewarded_orgs: minitrue, miniluv) - Julia Dixon - 2
         From
-            jones (minitrue) - Jones - 7
+            jones (minitrue) - Jones - 8
         """
         settings.OZP['USE_AUTH_SERVER'] = True
         self._all_listing_for_minitrue_profile_from_minitrue_profile()
@@ -276,13 +276,13 @@ class ProfileApiTest(APITestCase):
                 'highest_role': 'ORG_STEWARD',
                 'test_data_input_stewarded_organizations': True},
             # charrington (minipax, miniluv, minitrue) - User Level
-            {'id': 14, 'username': 'charrington', 'display_name': 'Charrington',
+            {'id': 12, 'username': 'charrington', 'display_name': 'Charrington',
                 'stewarded_organizations': [],
                 'groups': [{'name': 'USER'}],
                 'highest_role': 'USER',
                 'test_data_input_stewarded_organizations': True},
             # jones (minitrue) - User Level
-            {'id': 9,
+            {'id': 8,
                 'username': 'jones',
                 'display_name': 'Jones',
                 'stewarded_organizations': [],
