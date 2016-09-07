@@ -1,10 +1,10 @@
 # ozp-backend
 Django-based backend API for the OZONE Platform (OZP). For those who just want
 to get OZP (Center, HUD, Webtop, IWC) up and running, see the
-[quickstart](https://github.com/ozone-development/ozp-ansible#quickstart) of the [ozp-ansible](https://github.com/ozone-development/ozp-ansible) project.
+[quickstart](https://github.com/ozoneplatform/ozp-ansible#quickstart) of the [ozp-ansible](https://github.com/ozoneplatform/ozp-ansible) project.
 
 ## Background
-ozp-backend replaces [ozp-rest](https://github.com/ozone-development/ozp-rest)
+ozp-backend replaces [ozp-rest](https://github.com/aml-development/ozp-rest)
 as the backend for Center, HUD, Webtop, and IWC. Notable differences include:
 * Python vs. Java/Groovy
 * Django, Django Rest Framework vs. Grails, JAX-RS
