@@ -1186,7 +1186,7 @@ def run():
             agency=minitrue,
             listing_type=web_app,
             description='View locations',
-            launch_url='{0!s}/demo_apps/locationViewer/index.html'.format(DEMO_APP_ROOT),
+            launch_url='{0!s}/demo_apps/locationViewer/index.html?offline=true'.format(DEMO_APP_ROOT),
             version_name='1.0.0',
             unique_name='ozp.test.locationviewer{0!s}'.format(postfix_dot),
             small_icon=small_icon,
