@@ -23,6 +23,13 @@ urlpatterns = [
 ]
 urlpatterns = urlpatterns + apipatterns
 
+if hasattr(settings, "CAS_ENABLED") and settings.CAS_ENABLED:
+    import django_cas_ng.views
+    urlpatterns += [
+        url(r'^login/$', django_cas_ng.views.login, name='cas_ng_login'),
+        url(r'^logout/$', django_cas_ng.views.logout, name='cas_ng_logout'),
+    ]
+
 # In debug mode, serve the media and static resources with the django web server
 # https://docs.djangoproject.com/en/1.11/howto/static-files/#serving-static-files-during-development
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
