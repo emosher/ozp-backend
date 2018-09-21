@@ -66,6 +66,7 @@ class PluginMain(object):
 
         if r.status_code != 200:
             raise errors.AuthorizationFailure('Error contacting authorization server: {0!s}'.format(r.text))
+
         user_data = r.json()
 
         user_json_keys = ['dn', 'formalAccesses', 'clearances', 'dutyorg', 'visas']
@@ -87,6 +88,7 @@ class PluginMain(object):
         r = self.requests.get(url, cert=(server_crt, server_key), verify=False)
         if r.status_code != 200:
             raise errors.AuthorizationFailure('Error contacting authorization server: {0!s}'.format(r.text))
+
         group_data = r.json()
 
         if 'groups' not in group_data:
@@ -96,6 +98,7 @@ class PluginMain(object):
         user_data['is_org_steward'] = False
         user_data['is_apps_mall_steward'] = False
         user_data['is_metrics_user'] = False
+        user_data['is_beta_user'] = False
 
         for g in groups:
             if self.settings.OZP['OZP_AUTHORIZATION']['APPS_MALL_STEWARD_GROUP_NAME'] == utils.find_between(g, 'cn=', ','):
@@ -104,7 +107,8 @@ class PluginMain(object):
                 user_data['is_org_steward'] = True
             if self.settings.OZP['OZP_AUTHORIZATION']['METRICS_GROUP_NAME'] == utils.find_between(g, 'cn=', ','):
                 user_data['is_org_steward'] = True
-
+            if self.settings.OZP['OZP_AUTHORIZATION']['BETA_USER_GROUP_NAME'] == utils.find_between(g, 'cn=', ','):
+                user_data['is_beta_user'] = True
         return user_data
 
     def authorization_update(self, username, updated_auth_data=None, request=None, method=None):
@@ -132,6 +136,7 @@ class PluginMain(object):
         seconds_to_cache_data = int(settings.OZP['OZP_AUTHORIZATION']['SECONDS_TO_CACHE_DATA'])
         if seconds_to_cache_data > 24 * 3600:
             raise errors.AuthorizationFailure('Cannot cache data for more than 1 day')
+
         expires_in = profile.auth_expires - now
         if expires_in.days >= 1:
             raise errors.AuthorizationFailure('User {0!s} had auth expires set to expire in more than 24 hours'.format(username))
@@ -210,6 +215,15 @@ class PluginMain(object):
                     profile.user.groups.remove(g)
 
         # TODO: handle metrics user
+        if not updated_auth_data['is_beta_user']:
+            # ensure BETA USER is not in profile.user.groups
+            for g in profile.user.groups.all():
+                if g.name == 'BETA_USER':
+                    profile.user.groups.remove(g)
+        else:
+            # ensure BETA_USER is in profile.user.groups
+            g = Group.objects.get(name='BETA_USER')
+            profile.user.groups.add(g)
 
         # update profile.access_control:
         access_control = json.dumps(updated_auth_data)

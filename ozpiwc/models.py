@@ -7,7 +7,7 @@ import logging
 
 from django.db import models
 
-# Get an instance of a logger
+
 logger = logging.getLogger('ozp-iwc.' + str(__name__))
 
 

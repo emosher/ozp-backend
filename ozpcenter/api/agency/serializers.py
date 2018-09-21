@@ -8,7 +8,6 @@ from rest_framework import serializers
 from ozpcenter import models
 
 
-# Get an instance of a logger
 logger = logging.getLogger('ozp-center.' + str(__name__))
 
 
@@ -18,6 +17,19 @@ class AgencySerializer(serializers.ModelSerializer):
         model = models.Agency
         depth = 2
         fields = ('title', 'short_name', 'id')
+
+
+class CreateAgencySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.Agency
+        depth = 2
+        fields = ('title', 'short_name')
+
+        extra_kwargs = {
+            'title': {'validators': []},
+            'short_name': {'validators': []}
+        }
 
 
 class MinimalAgencySerializer(serializers.ModelSerializer):

@@ -9,7 +9,7 @@ from ozpcenter import models
 import ozpcenter.api.image.model_access as image_model_access
 import ozpcenter.api.image.serializers as image_serializers
 
-# Get an instance of a logger
+
 logger = logging.getLogger('ozp-center.' + str(__name__))
 
 
@@ -19,6 +19,7 @@ class IntentSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Intent
         depth = 1
+        fields = '__all__'
 
     def validate(self, data):
         icon = data.get('icon')
@@ -28,3 +29,15 @@ class IntentSerializer(serializers.ModelSerializer):
         else:
             data['icon'] = None
         return data
+
+
+class ListingIntentSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.Intent
+        # TODO: is action the right thing?
+        fields = ('action',)
+
+        extra_kwargs = {
+            'action': {'validators': []}
+        }

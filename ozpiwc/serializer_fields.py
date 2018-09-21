@@ -14,8 +14,8 @@ class JsonField(serializers.Field):
 
     def to_representation(self, obj):
         if isinstance(obj, str):
-            return obj
-        return json.dumps(obj)
+            return json.loads(obj)
+        return obj
 
     def to_internal_value(self, data):
         try:

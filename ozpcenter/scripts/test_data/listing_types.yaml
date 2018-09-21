@@ -1,0 +1,11 @@
+listing_types:
+- description: code library
+  title: Code Library
+- description: desktop app
+  title: Desktop App
+- description: web applications
+  title: Web Application
+- description: web services
+  title: Web Services
+- description: widget things
+  title: Widget

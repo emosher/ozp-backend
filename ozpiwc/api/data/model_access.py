@@ -5,7 +5,7 @@ import logging
 
 import ozpiwc.models as models
 
-# Get an instance of a logger
+
 logger = logging.getLogger('ozp-center.' + str(__name__))
 
 

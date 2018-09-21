@@ -6,7 +6,7 @@ Can do things like if view.action == 'create'
 from rest_framework import permissions
 import ozpcenter.model_access as model_access
 
-from plugins_util import plugin_manager
+from plugins import plugin_manager
 
 
 SAFE_METHODS = ['GET', 'HEAD', 'OPTIONS']

@@ -1,0 +1,114 @@
+appdirs==1.4.3
+autopep8==1.3.2
+  - pycodestyle [required: >=2.3, installed: 2.3.1]
+boto3==1.4.7
+  - botocore [required: >=1.7.0,<1.8.0, installed: 1.7.19]
+    - docutils [required: >=0.10, installed: 0.14]
+    - jmespath [required: <1.0.0,>=0.7.1, installed: 0.9.3]
+    - python-dateutil [required: <3.0.0,>=2.1, installed: 2.6.1]
+      - six [required: >=1.5, installed: 1.11.0]
+  - jmespath [required: <1.0.0,>=0.7.1, installed: 0.9.3]
+  - s3transfer [required: <0.2.0,>=0.1.10, installed: 0.1.11]
+    - botocore [required: >=1.3.0,<2.0.0, installed: 1.7.19]
+      - docutils [required: >=0.10, installed: 0.14]
+      - jmespath [required: <1.0.0,>=0.7.1, installed: 0.9.3]
+      - python-dateutil [required: <3.0.0,>=2.1, installed: 2.6.1]
+        - six [required: >=1.5, installed: 1.11.0]
+django-cors-headers==2.1.0
+django-enumfield==1.2.1
+django-extensions==1.9.1
+  - six [required: >=1.2, installed: 1.11.0]
+django-extras==0.3
+  - django [required: >=1.4, installed: 1.11.5]
+    - pytz [required: Any, installed: 2017.2]
+  - six [required: Any, installed: 1.11.0]
+django-filter==1.0.4
+django-nose==1.4.5
+  - nose [required: >=1.2.1, installed: 1.3.7]
+django-redis==4.8.0
+  - redis [required: >=2.10.0, installed: 2.10.6]
+django-rest-swagger==2.1.2
+  - coreapi [required: >=2.3.0, installed: 2.3.1]
+    - coreschema [required: Any, installed: 0.0.4]
+      - jinja2 [required: Any, installed: 2.9.6]
+        - MarkupSafe [required: >=0.23, installed: 1.0]
+    - itypes [required: Any, installed: 1.1.0]
+    - requests [required: Any, installed: 2.18.4]
+      - certifi [required: >=2017.4.17, installed: 2017.7.27.1]
+      - chardet [required: >=3.0.2,<3.1.0, installed: 3.0.4]
+      - idna [required: <2.7,>=2.5, installed: 2.6]
+      - urllib3 [required: <1.23,>=1.21.1, installed: 1.22]
+    - uritemplate [required: Any, installed: 3.0.0]
+  - djangorestframework [required: >=3.5.4, installed: 3.6.4]
+  - openapi-codec [required: >=1.3.1, installed: 1.3.2]
+    - coreapi [required: >=2.2.0, installed: 2.3.1]
+      - coreschema [required: Any, installed: 0.0.4]
+        - jinja2 [required: Any, installed: 2.9.6]
+          - MarkupSafe [required: >=0.23, installed: 1.0]
+      - itypes [required: Any, installed: 1.1.0]
+      - requests [required: Any, installed: 2.18.4]
+        - certifi [required: >=2017.4.17, installed: 2017.7.27.1]
+        - chardet [required: >=3.0.2,<3.1.0, installed: 3.0.4]
+        - idna [required: <2.7,>=2.5, installed: 2.6]
+        - urllib3 [required: <1.23,>=1.21.1, installed: 1.22]
+      - uritemplate [required: Any, installed: 3.0.0]
+  - simplejson [required: Any, installed: 3.11.1]
+django-storages==1.6.5
+drf-nested-routers==0.90.0
+  - Django [required: >=1.8, installed: 1.11.5]
+    - pytz [required: Any, installed: 2017.2]
+  - djangorestframework [required: >=2.4.3, installed: 3.6.4]
+elasticsearch==5.4.0
+  - urllib3 [required: <2.0,>=1.8, installed: 1.22]
+factory-boy==2.9.2
+  - Faker [required: >=0.7.0, installed: 0.8.4]
+    - python-dateutil [required: >=2.4, installed: 2.6.1]
+      - six [required: >=1.5, installed: 1.11.0]
+    - six [required: Any, installed: 1.11.0]
+flamegraph==0.1
+gunicorn==19.7.1
+mccabe==0.6.1
+mkdocs==0.16.3
+  - click [required: >=3.3, installed: 6.7]
+  - Jinja2 [required: >=2.7.1, installed: 2.9.6]
+    - MarkupSafe [required: >=0.23, installed: 1.0]
+  - livereload [required: >=2.5.1, installed: 2.5.1]
+    - six [required: Any, installed: 1.11.0]
+    - tornado [required: Any, installed: 4.5.2]
+      - backports-abc [required: >=0.4, installed: 0.5]
+  - Markdown [required: >=2.3.1, installed: 2.6.9]
+  - PyYAML [required: >=3.10, installed: 3.12]
+  - tornado [required: >=4.1, installed: 4.5.2]
+    - backports-abc [required: >=0.4, installed: 0.5]
+mockredispy==2.9.3
+msgpack-python==0.4.8
+packaging==16.8
+  - pyparsing [required: Any, installed: 2.2.0]
+  - six [required: Any, installed: 1.11.0]
+pep8==1.7.0
+Pillow==4.2.1
+  - olefile [required: Any, installed: 0.44]
+pipdeptree==0.10.1
+  - pip [required: >=6.0.0, installed: 9.0.1]
+psycopg2==2.7.3.1
+pyflakes==1.6.0
+pytest-cov==2.5.1
+  - coverage [required: >=3.7.1, installed: 4.4.1]
+  - pytest [required: >=2.6.0, installed: 3.2.3]
+    - py [required: >=1.4.33, installed: 1.4.34]
+    - setuptools [required: Any, installed: 38.2.4]
+pytest-django==3.1.2
+  - pytest [required: >=2.9, installed: 3.2.3]
+    - py [required: >=1.4.33, installed: 1.4.34]
+    - setuptools [required: Any, installed: 38.2.4]
+pytest-xdist==1.20.1
+  - execnet [required: >=1.1, installed: 1.5.0]
+    - apipkg [required: >=1.4, installed: 1.4]
+  - pytest [required: >=3.0.0, installed: 3.2.3]
+    - py [required: >=1.4.33, installed: 1.4.34]
+    - setuptools [required: Any, installed: 38.2.4]
+  - pytest-forked [required: Any, installed: 0.2]
+    - pytest [required: >=2.6.0, installed: 3.2.3]
+      - py [required: >=1.4.33, installed: 1.4.34]
+      - setuptools [required: Any, installed: 38.2.4]
+wheel==0.30.0

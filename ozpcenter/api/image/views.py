@@ -5,19 +5,24 @@ import logging
 
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from rest_framework.parsers import JSONParser
+from rest_framework.parsers import MultiPartParser
+from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import viewsets
-from rest_framework.parsers import MultiPartParser, JSONParser
-from rest_framework.response import Response
 
+from ozp.storage import media_storage
+from ozpcenter.pipe import pipeline
+from ozpcenter.pipe import pipes
+from ozpcenter.recommend import recommend_utils
+from ozpcenter import errors
 from ozpcenter import permissions
-from plugins_util.plugin_manager import system_has_access_control
+from plugins.plugin_manager import system_has_access_control
 import ozpcenter.api.image.model_access as model_access
 import ozpcenter.api.image.serializers as serializers
-from ozpcenter import errors
 import ozpcenter.model_access as generic_model_access
 
-# Get an instance of a logger
+
 logger = logging.getLogger('ozp-center.' + str(__name__))
 
 
@@ -87,7 +92,7 @@ class ImageViewSet(viewsets.ModelViewSet):
     """
 
     def get_queryset(self):
-        return model_access.get_all_images(self.request.user.username)
+        return model_access.get_all_images()
 
     serializer_class = serializers.ImageSerializer
     permission_classes = (permissions.IsUser,)
@@ -117,20 +122,22 @@ class ImageViewSet(viewsets.ModelViewSet):
         if 'cuz_ie' in request.data:
             return Response('IE made me do this', status=status.HTTP_200_OK)
 
-        serializer = serializers.ImageCreateSerializer(data=request.data,
-            context={'request': request})
+        serializer = serializers.ImageCreateSerializer(data=request.data, context={'request': request})
         if not serializer.is_valid():
-            logger.error('{0!s}'.format(serializer.errors))
-            return Response(serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST)
+            raise errors.ValidationException('{0!s}'.format(serializer.errors))
+
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def list(self, request):
         queryset = self.get_queryset()
-        serializer = serializers.ImageSerializer(queryset,
-            many=True, context={'request': request})
-        return Response(serializer.data)
+
+        serializer = serializers.ImageSerializer(queryset, many=True, context={'request': request})
+        serializer_iterator = recommend_utils.ListIterator(serializer.data)
+        pipeline_list = [pipes.ListingDictPostSecurityMarkingCheckPipe(request.user.username)]
+
+        recommended_listings = pipeline.Pipeline(serializer_iterator, pipeline_list).to_list()
+        return Response(recommended_listings)
 
     def retrieve(self, request, pk=None):
         """
@@ -138,24 +145,31 @@ class ImageViewSet(viewsets.ModelViewSet):
         """
         queryset = self.get_queryset()
         image = get_object_or_404(queryset, pk=pk)
-        image_path = model_access.get_image_path(pk)
-        # enforce access control
-        profile = generic_model_access.get_profile(self.request.user.username)
 
-        if not system_has_access_control(profile.user.username, image.security_marking):
-            raise errors.PermissionDenied()
+        # enforce access control
+        if not system_has_access_control(self.request.user.username, image.security_marking):
+            raise errors.PermissionDenied('Security marking too high for current user')
+
+        image_path = str(image.id) + '_' + image.image_type.name + '.' + image.file_extension
 
         content_type = 'image/' + image.file_extension
         try:
-            with open(image_path, 'rb') as f:
+            with media_storage.open(image_path) as f:
                 return HttpResponse(f.read(), content_type=content_type)
         except IOError:
-            logger.error('No image found for pk {0:d}'.format(pk))
+            logger.error('No image found for pk {}'.format(pk))
             return Response(status=status.HTTP_404_NOT_FOUND)
 
     def destroy(self, request, pk=None):
         queryset = self.get_queryset()
         image = get_object_or_404(queryset, pk=pk)
-        # TODO: remove image from file system
+
+        # TODO: Verify that only stewards can delete images and upload user
+
+        # enforce access control
+        if not system_has_access_control(self.request.user.username, image.security_marking):
+            raise errors.PermissionDenied('Security marking too high for current user')
+
         image.delete()
+        # TODO: remove image from storage
         return Response(status=status.HTTP_204_NO_CONTENT)

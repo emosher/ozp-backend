@@ -5,15 +5,31 @@ import logging
 
 from ozpcenter import models
 
-# Get an instance of a logger
+
 logger = logging.getLogger('ozp-center.' + str(__name__))
 
 
+def get_all_contacts():
+    """
+    Get all contacts
+
+    Return:
+        [Contact]: List of Contact Objects
+    """
+    return models.Contact.objects.all()
+
+
 def get_all_contact_types():
+    """
+    Get all contact types
+    """
     return models.ContactType.objects.all()
 
 
 def get_contact_type_by_name(name, reraise=True):
+    """
+    Get contact type by name
+    """
     try:
         return models.ContactType.objects.get(name=name)
     except models.ContactType.DoesNotExist as err:

@@ -8,15 +8,18 @@ from django.core.exceptions import ObjectDoesNotExist
 from ozpcenter import models
 
 
-# Get an instance of a logger
 logger = logging.getLogger('ozp-center.' + str(__name__))
 
 
 def get_profile(username):
     """
-    get a user's Profile
+    Get a User's Profile
 
-    Key: current_profile:<username>
+    Args:
+        username
+
+    Return:
+        Profile
     """
     try:
         return models.Profile.objects.get(user__username=username)

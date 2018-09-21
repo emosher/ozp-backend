@@ -12,15 +12,15 @@ from django.core.cache import cache
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework import viewsets
-from rest_framework.decorators import list_route
+from rest_framework.decorators import list_route, detail_route
 from rest_framework.response import Response
 
+from ozpcenter import errors
 from ozpcenter import permissions
 from ozpcenter.api.library import serializers
 from ozpcenter.api.library import model_access
 
 
-# Get an instance of a logger
 logger = logging.getLogger('ozp-center.' + str(__name__))
 
 
@@ -97,13 +97,12 @@ class UserLibraryViewSet(viewsets.ViewSet):
             query: replace
         omit_serializer: true
         """
-        serializer = serializers.UserLibrarySerializer(data=request.data,
-            context={'request': request})
+        serializer = serializers.UserLibrarySerializer(data=request.data, context={'request': request})
 
         if not serializer.is_valid():
             logger.error('{0!s}'.format(serializer.errors))
-            return Response(serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST)
+            raise errors.RequestException('{0!s}'.format(serializer.errors))
+
         serializer.save()
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -115,8 +114,7 @@ class UserLibraryViewSet(viewsets.ViewSet):
         serializer: ozpcenter.api.library.serializers.UserLibrarySerializer
         """
         queryset = self.get_queryset()
-        serializer = serializers.UserLibrarySerializer(queryset,
-            many=True, context={'request': request})
+        serializer = serializers.UserLibrarySerializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)
 
     def retrieve(self, request, pk=None):
@@ -125,8 +123,7 @@ class UserLibraryViewSet(viewsets.ViewSet):
         """
         queryset = self.get_queryset()
         library_entry = get_object_or_404(queryset, pk=pk)
-        serializer = serializers.UserLibrarySerializer(library_entry,
-            context={'request': request})
+        serializer = serializers.UserLibrarySerializer(library_entry, context={'request': request})
 
         request_username = request.user.username
         listing_type = self.request.query_params.get('type', None)
@@ -148,6 +145,20 @@ class UserLibraryViewSet(viewsets.ViewSet):
         library_entry.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @detail_route(methods=['delete'], permission_classes=[permissions.IsUser])
+    def delete_folder(self, request, pk):
+        """
+        Remove a Listing from the current user's library (unbookmark)
+        and all listings from the current user with the same folderName
+        Delete by library id, not listing id
+        """
+        queryset = self.get_queryset()
+        library_entry = get_object_or_404(queryset, pk=pk)
+        listing_type = self.request.query_params.get('type', None)
+        entries_in_folder = model_access.get_self_application_library(self.request.user.username, listing_type, library_entry.folder)
+        entries_in_folder.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     @list_route(methods=['post'], permission_classes=[permissions.IsUser])
     def import_bookmarks(self, request):
         """
@@ -156,14 +167,28 @@ class UserLibraryViewSet(viewsets.ViewSet):
         current_request_username = request.user.username
         bookmark_notification_id = request.data.get('bookmark_notification_id')
 
-        errors, data = model_access.import_bookmarks(current_request_username, bookmark_notification_id)
-        if errors:
-            return Response({'message': '{0}'.format(errors)}, status=status.HTTP_400_BAD_REQUEST)
+        error, data = model_access.import_bookmarks(current_request_username, bookmark_notification_id)
+        if error:
+            raise errors.RequestException('{0!s}'.format(error))
         else:
             serializer = serializers.UserLibrarySerializer(data,
                 many=True, context={'request': request})
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @list_route(methods=['post'], permission_classes=[permissions.IsUser])
+    def create_batch(self, request):
+        """
+        Create Batch
+        """
+        current_request_username = request.user.username
+        request_data = request.data
+
+        data = model_access.create_batch_library_entries(current_request_username, request_data)
+
+        serializer = serializers.UserLibrarySerializer(data, many=True, context={'request': request})
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @list_route(methods=['put'], permission_classes=[permissions.IsUser])
     def update_all(self, request):
@@ -206,8 +231,9 @@ class UserLibraryViewSet(viewsets.ViewSet):
         omit_serializer: true
         """
         current_request_username = request.user.username
-        errors, data = model_access.batch_update_user_library_entry(current_request_username, request.data)
-        if errors:
-            return Response({'message': '{0}'.format(errors)}, status=status.HTTP_400_BAD_REQUEST)
+        error, data = model_access.batch_update_user_library_entry(current_request_username, request.data)
+        if error:
+            raise errors.RequestException('{0!s}'.format(errors))
+
         else:
             return Response(data, status=status.HTTP_200_OK)

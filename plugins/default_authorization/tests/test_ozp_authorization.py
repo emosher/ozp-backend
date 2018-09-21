@@ -4,6 +4,7 @@ Tests for base_authorization
 import datetime
 import pytz
 
+from django.test import override_settings
 from django.conf import settings
 from django.test import TestCase
 
@@ -13,6 +14,7 @@ from plugins.default_authorization.main import PluginMain
 import ozpcenter.model_access as model_access
 
 
+@override_settings(ES_ENABLED=False)
 class OzpAuthorizationTest(TestCase):
 
     def setUp(self):
@@ -41,17 +43,20 @@ class OzpAuthorizationTest(TestCase):
 
     def test_invalid_auth_cache(self):
         """
+        test_invalid_auth_cache
         If user's auth_expires is set too far ahead, authorization should fail
+        Set auth cache to expire in 1+ days (against the rules!)
         """
         profile = model_access.get_profile('jones')
-        # set auth cache to expire in 1+ days (against the rules!)
         profile.auth_expires = datetime.datetime.now(pytz.utc) + datetime.timedelta(days=1, seconds=5)
         profile.save()
+
         self.assertRaises(errors.AuthorizationFailure,
             self.auth.authorization_update, 'jones', method='test_invalid_auth_cache')
 
     def test_valid_cache(self):
         profile = model_access.get_profile('jones')
+
         # set auth cache to expire in 1 day
         profile.auth_expires = datetime.datetime.now(pytz.utc) + datetime.timedelta(days=1)
         profile.save()
@@ -75,10 +80,11 @@ class OzpAuthorizationTest(TestCase):
             'duty_org': 'Minitrue',
             'is_org_steward': False,
             'is_apps_mall_steward': False,
-            'is_metrics_user': False
+            'is_metrics_user': False,
+            'is_beta_user': False
         }
-        a = self.auth.authorization_update('jones', auth_data, method='test_update_cache')
-        self.assertEqual(a, True)
+        authorization_update_result = self.auth.authorization_update('jones', auth_data, method='test_update_cache')
+        self.assertTrue(authorization_update_result)
         # auth_expires should be rest to ~1 day from now
         profile = model_access.get_profile('jones')
         auth_expires_in = profile.auth_expires - datetime.datetime.now(pytz.utc)
@@ -97,6 +103,7 @@ class OzpAuthorizationTest(TestCase):
         profile.save()
         org = profile.organizations.values_list('title', flat=True)[0]
         self.assertEqual(org, 'Ministry of Plenty')
+
         auth_data = {
             'dn': 'Rutherford rutherford',
             'cn': 'Rutherford',
@@ -106,7 +113,8 @@ class OzpAuthorizationTest(TestCase):
             'duty_org': 'Miniluv',
             'is_org_steward': False,
             'is_apps_mall_steward': False,
-            'is_metrics_user': False
+            'is_metrics_user': False,
+            'is_beta_user': False
         }
         self.auth.authorization_update('rutherford', auth_data, method='test_org_change')
         profile = model_access.get_profile('rutherford')
@@ -134,15 +142,16 @@ class OzpAuthorizationTest(TestCase):
             'duty_org': 'Minitrue',
             'is_org_steward': False,
             'is_apps_mall_steward': False,
-            'is_metrics_user': False
+            'is_metrics_user': False,
+            'is_beta_user': False
         }
         self.auth.authorization_update('wsmith', auth_data, method='test_org_steward_to_user')
         profile = model_access.get_profile('wsmith')
         stewarded_orgs = profile.stewarded_organizations.values_list('title', flat=True)
-        self.assertTrue(len(stewarded_orgs) == 0)
+        self.assertEqual(len(stewarded_orgs), 0)
         groups = profile.user.groups.values_list('name', flat=True)
         self.assertTrue('USER' in groups)
-        self.assertTrue(len(groups) == 1)
+        self.assertEqual(len(groups), 1)
         self.assertEqual(profile.highest_role(), 'USER')
 
     def test_apps_mall_steward_to_user(self):
@@ -165,13 +174,15 @@ class OzpAuthorizationTest(TestCase):
             'duty_org': 'Minitrue',
             'is_org_steward': False,
             'is_apps_mall_steward': False,
-            'is_metrics_user': False
+            'is_metrics_user': False,
+            'is_beta_user': False
         }
         self.auth.authorization_update('bigbrother', auth_data, method='test_apps_mall_steward_to_user')
         profile = model_access.get_profile('bigbrother')
         groups = profile.user.groups.values_list('name', flat=True)
         self.assertTrue('USER' in groups)
-        self.assertTrue(len(groups) == 1)
+        self.assertEqual(len(groups), 1)
+        self.assertFalse('APPS_MALL_STEWARD' in groups)
         self.assertEqual(profile.highest_role(), 'USER')
 
     def test_apps_mall_steward_to_org_steward(self):
@@ -194,7 +205,8 @@ class OzpAuthorizationTest(TestCase):
             'duty_org': 'Minitrue',
             'is_org_steward': True,
             'is_apps_mall_steward': False,
-            'is_metrics_user': False
+            'is_metrics_user': False,
+            'is_beta_user': False
         }
         self.auth.authorization_update('bigbrother', auth_data, method='test_org_steward_to_apps_mall_steward')
         profile = model_access.get_profile('bigbrother')
@@ -223,13 +235,14 @@ class OzpAuthorizationTest(TestCase):
             'duty_org': 'Minitrue',
             'is_org_steward': False,
             'is_apps_mall_steward': True,
-            'is_metrics_user': False
+            'is_metrics_user': False,
+            'is_beta_user': False
         }
-        self.auth.authorization_update('wsmith', auth_data,
-                    method='test_org_steward_to_apps_mall_steward_only')
+        self.assertTrue(self.auth.authorization_update('wsmith', auth_data,
+                    method='test_org_steward_to_apps_mall_steward_only'))
         profile = model_access.get_profile('wsmith')
         stewarded_orgs = profile.stewarded_organizations.values_list('title', flat=True)
-        self.assertTrue(len(stewarded_orgs) == 0)
+        self.assertEqual(len(stewarded_orgs), 0)
         groups = profile.user.groups.values_list('name', flat=True)
         self.assertTrue('APPS_MALL_STEWARD' in groups)
         self.assertTrue('ORG_STEWARD' not in groups)
@@ -242,11 +255,13 @@ class OzpAuthorizationTest(TestCase):
         profile = model_access.get_profile('wsmith')
         profile.auth_expires = datetime.datetime.now(pytz.utc)
         profile.save()
+
         stewarded_orgs = profile.stewarded_organizations.values_list('title', flat=True)
+        groups = profile.user.groups.values_list('name', flat=True)
         self.assertTrue('Ministry of Truth' in stewarded_orgs)
         self.assertEqual(profile.highest_role(), 'ORG_STEWARD')
-        groups = profile.user.groups.values_list('name', flat=True)
         self.assertTrue('ORG_STEWARD' in groups)
+
         auth_data = {
             'dn': 'Winston Smith wsmith',
             'cn': 'Winston Smith',
@@ -256,13 +271,76 @@ class OzpAuthorizationTest(TestCase):
             'duty_org': 'Minitrue',
             'is_org_steward': True,
             'is_apps_mall_steward': True,
-            'is_metrics_user': False
+            'is_metrics_user': False,
+            'is_beta_user': False,
         }
-        self.auth.authorization_update('wsmith', auth_data, method='test_org_steward_to_apps_mall_steward')
+        self.assertTrue(self.auth.authorization_update('wsmith', auth_data, method='test_org_steward_to_apps_mall_steward'))
+
         profile = model_access.get_profile('wsmith')
         stewarded_orgs = profile.stewarded_organizations.values_list('title', flat=True)
-        self.assertTrue('Ministry of Truth' in stewarded_orgs)
         groups = profile.user.groups.values_list('name', flat=True)
+        self.assertTrue('Ministry of Truth' in stewarded_orgs)
         self.assertTrue('APPS_MALL_STEWARD' in groups)
         self.assertTrue('ORG_STEWARD' in groups)
+        self.assertEqual(profile.highest_role(), 'APPS_MALL_STEWARD')
+
+    def test_beta_user_to_user(self):
+        """
+        A user who was a beta user is now a user
+        """
+        profile = model_access.get_profile('betaraybill')
+        profile.auth_expires = datetime.datetime.now(pytz.utc)
+        profile.save()
+
+        groups = profile.user.groups.values_list('name', flat=True)
+        self.assertEqual(profile.highest_role(), 'USER')
+        self.assertTrue('BETA_USER' in groups)
+
+        auth_data = {
+            'dn': 'BetaRayBill betaraybill',
+            'cn': 'Beta Ray Bill',
+            'clearances': ['U', 'C', 'S', 'TS'],
+            'formal_accesses': [],
+            'visas': [],
+            'duty_org': 'Miniluv',
+            'is_org_steward': False,
+            'is_apps_mall_steward': False,
+            'is_metrics_user': False,
+            'is_beta_user': False,
+        }
+        self.assertTrue(self.auth.authorization_update('betaraybill', auth_data, method='test_user_to_beta_user'))
+
+        profile = model_access.get_profile('betaraybill')
+        groups = profile.user.groups.values_list('name', flat=True)
+        self.assertFalse('BETA_USER' in groups)
+        self.assertEqual(profile.highest_role(), 'USER')
+
+    def test_beta_user_apps_mall_steward_to_apps_mall_steward(self):
+        """
+        A apps mall steward who was a beta user is now a apps mall steward
+        """
+        profile = model_access.get_profile('bettafish')
+        profile.auth_expires = datetime.datetime.now(pytz.utc)
+        profile.save()
+        self.assertEqual(profile.highest_role(), 'APPS_MALL_STEWARD')
+        groups = profile.user.groups.values_list('name', flat=True)
+        self.assertTrue('BETA_USER' in groups)
+        self.assertEqual(len(groups), 2)
+        auth_data = {
+            'dn': 'Bettafish bettafish',
+            'cn': 'Betta Fish',
+            'clearances': ['U', 'C', 'S', 'TS'],
+            'formal_accesses': [],
+            'visas': [],
+            'duty_org': 'Miniluv',
+            'is_org_steward': False,
+            'is_apps_mall_steward': True,
+            'is_metrics_user': False,
+            'is_beta_user': False,
+        }
+        self.auth.authorization_update('betaraybill', auth_data, method='test_beta_user_apps_mall_steward_to_apps_mall_steward')
+        profile = model_access.get_profile('betaraybill')
+        groups = profile.user.groups.values_list('name', flat=True)
+        self.assertFalse('BETA_USER' in groups)
+        self.assertEqual(len(groups), 1)
         self.assertEqual(profile.highest_role(), 'APPS_MALL_STEWARD')
