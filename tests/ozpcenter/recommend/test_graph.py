@@ -1,28 +1,19 @@
-"""
-Make sure that Pipe and Pipeline classes work
-"""
-from django.test import override_settings
 from django.test import TestCase
+from django.test import override_settings
 
 from ozpcenter.recommend.graph import Graph
-from ozpcenter.scripts import sample_data_generator as data_gen
 
 
 @override_settings(ES_ENABLED=False)
 class GraphTest(TestCase):
 
-    def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
-        pass
-
     @classmethod
     def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
-        data_gen.run()
+        # data_gen.run()
+        pass
+
+    def setUp(self):
+        pass
 
     def test_graph_add_edit_one_vertex(self):
         graph = Graph()

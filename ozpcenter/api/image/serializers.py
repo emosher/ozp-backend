@@ -60,7 +60,8 @@ class ImageSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class ShortImageSerializer(serializers.HyperlinkedModelSerializer):
-
+    security_marking = serializers.CharField(default='UNCLASSIFIED')
+    
     class Meta:
         model = models.Image
         fields = ('url', 'id', 'security_marking')

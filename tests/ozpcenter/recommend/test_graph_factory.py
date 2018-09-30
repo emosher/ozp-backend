@@ -1,8 +1,5 @@
-"""
-Make sure that Pipe and Pipeline classes work
-"""
-from django.test import override_settings
 from django.test import TestCase
+from django.test import override_settings
 
 from ozpcenter.recommend.graph_factory import GraphFactory
 from ozpcenter.scripts import sample_data_generator as data_gen
@@ -11,18 +8,12 @@ from ozpcenter.scripts import sample_data_generator as data_gen
 @override_settings(ES_ENABLED=False)
 class GraphTest(TestCase):
 
-    def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
-        pass
-
     @classmethod
     def setUpTestData(cls):
-        """
-        Set up test database for the whole TestCase (only run once for the TestCase)
-        """
         data_gen.run()
+
+    def setUp(self):
+        pass
 
     def test_load_db_into_graph(self):
         graph = GraphFactory.load_db_into_graph()

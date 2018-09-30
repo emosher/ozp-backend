@@ -1,27 +1,22 @@
-"""
-Tests for listing reviews
-"""
-import collections
-from django.test import override_settings
-from rest_framework import status
-from tests.ozp.cases import APITestCase
 from unittest import skip
-from ozpcenter.utils import shorthand_dict
 
-from ozpcenter import model_access as generic_model_access
+from django.test import override_settings
+
 from ozpcenter.scripts import sample_data_generator as data_gen
+from ozpcenter.utils import shorthand_dict
+from tests.ozp.cases import APITestCase
 from tests.ozpcenter.helper import APITestHelper
 
 
 @override_settings(ES_ENABLED=False)
 class ListingReviewApiTest(APITestCase):
 
-    def setUp(self):
-        self.maxDiff = None
-
     @classmethod
     def setUpTestData(cls):
         data_gen.run()
+
+    def setUp(self):
+        self.maxDiff = None
 
     def test_get_all_review_for_listing(self):
         url = '/api/listing/1/review/'

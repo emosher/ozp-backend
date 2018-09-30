@@ -1,27 +1,12 @@
-"""
-Generic Model Access
-"""
-import logging
+from typing import Optional
 
 from django.core.exceptions import ObjectDoesNotExist
 
-from ozpcenter import models
+from ozpcenter.models import Profile
 
 
-logger = logging.getLogger('ozp-center.' + str(__name__))
-
-
-def get_profile(username):
-    """
-    Get a User's Profile
-
-    Args:
-        username
-
-    Return:
-        Profile
-    """
+def get_profile(username: str) -> Optional[Profile]:
     try:
-        return models.Profile.objects.get(user__username=username)
+        return Profile.objects.get(user__username=username)
     except ObjectDoesNotExist:
         return None

@@ -1,28 +1,19 @@
-"""
-Tests for (most) of the Utils mechanism
-"""
-from django.test import override_settings
 from django.test import TestCase
+from django.test import override_settings
 
 from ozpcenter.recommend import recommend_utils
-from ozpcenter.scripts import sample_data_generator as data_gen
 
 
 @override_settings(ES_ENABLED=False)
 class UtilsTest(TestCase):
 
-    def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
-        pass
-
     @classmethod
     def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
-        data_gen.run()
+        # data_gen.run()
+        pass
+
+    def setUp(self):
+        pass
 
     # OLD REF
     # def test_get_top_n_score(self):

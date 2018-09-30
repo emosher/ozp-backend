@@ -63,6 +63,8 @@ class SearchParamParser(object):
         self.agencies = [str(record) for record in request.query_params.getlist('agency', [])]
         self.listing_types = [str(record) for record in request.query_params.getlist('type', [])]
 
+        self.exportable = request.query_params.get('exportable')
+
         # Ordering Example: api/listings/essearch/?search=&limit=24&offset=24&ordering=-title
         self.ordering = [str(record) for record in request.query_params.getlist('ordering', [])]
 
@@ -285,6 +287,9 @@ def generate_link(search_param_parser, offset_prediction):
     [query_temp.update({'agency': current_category}) for current_category in search_param_parser.agencies]
     [query_temp.update({'type': current_category}) for current_category in search_param_parser.listing_types]
 
+    if search_param_parser.exportable is not None:
+        query_temp.update({'exportable': search_param_parser.exportable})
+
     return '{!s}/api/listings/essearch/?{!s}'.format(search_param_parser.base_url, query_temp.urlencode())
 
 
@@ -303,6 +308,7 @@ def search(request_username, search_param_parser):
      - category
      - agency
      - listing types
+     - exportable
 
     Users shall only see what they are authorized to see
       'is_private': false,

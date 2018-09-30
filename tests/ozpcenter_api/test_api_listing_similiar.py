@@ -1,29 +1,20 @@
-"""
-Tests for listing endpoints
-"""
 from django.test import override_settings
-from tests.ozp.cases import APITestCase
 from rest_framework import status
 
 from ozpcenter import model_access as generic_model_access
 from ozpcenter.scripts import sample_data_generator as data_gen
+from tests.ozp.cases import APITestCase
 
 
 @override_settings(ES_ENABLED=False)
 class ListingSimilarApiTest(APITestCase):
 
-    def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
-        self.maxDiff = None
-
     @classmethod
     def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
         data_gen.run()
+
+    def setUp(self):
+        self.maxDiff = None
 
     def test_get_similar_list_1_categories(self):
         user = generic_model_access.get_profile('wsmith').user

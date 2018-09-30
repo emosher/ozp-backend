@@ -1,30 +1,27 @@
-"""
-Tests for notification endpoints
-"""
-from unittest import skip
 import copy
 import datetime
-import pytz
+from unittest import skip
 
+import pytz
 from django.test import override_settings
 from rest_framework import status
-from tests.ozp.cases import APITestCase
-from ozpcenter.utils import shorthand_dict
 
-from tests.ozpcenter.helper import ExceptionUnitTestHelper
 from ozpcenter import model_access as generic_model_access
 from ozpcenter.scripts import sample_data_generator as data_gen
-
+from ozpcenter.utils import shorthand_dict
+from tests.ozp.cases import APITestCase
 from tests.ozpcenter.helper import APITestHelper
+from tests.ozpcenter.helper import ExceptionUnitTestHelper
 
 
 @override_settings(ES_ENABLED=False)
 class NotificationApiTest(APITestCase):
 
+    @classmethod
+    def setUpTestData(cls):
+        data_gen.run()
+
     def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
         self.maxDiff = None
         self.user_library_bigbrother = [
             'Tornado-Weather',
@@ -331,13 +328,6 @@ class NotificationApiTest(APITestCase):
             'system-Systemwillbefunctioninginadegredadedstatebetween1800Z-0400ZonA/B',
             'system-Systemwillbegoingdownforapproximately30minutesonX/Yat1100Z'
         ]
-
-    @classmethod
-    def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
-        data_gen.run()
 
     def _format_notification_response(self, response):
         return ['{}-{}-{}'.format(entry['entity_id'], entry['notification_type'], ''.join(entry['message'].split())) for entry in response.data]

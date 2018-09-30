@@ -1,23 +1,25 @@
 """
 Tests for (most) of the PkiAuthentication mechanism
 """
-from django.test import override_settings
-from django.test import TestCase
 from unittest.mock import MagicMock
 
-from ozpcenter import models
-from ozpcenter.scripts import sample_data_generator as data_gen
+from django.test import TestCase
+from django.test import override_settings
+
 import ozpcenter.auth.pkiauth as pkiauth
 import ozpcenter.model_access as model_access
+from ozpcenter import models
+from ozpcenter.scripts import sample_data_generator as data_gen
 
 
 @override_settings(ES_ENABLED=False)
 class PkiAuthenticationTest(TestCase):
 
+    @classmethod
+    def setUpTestData(cls):
+        data_gen.run()
+
     def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
         self.meta_dict = {
             'HTTP_X_SSL_AUTHENTICATED': 'SUCCESS',
             'HTTP_X_SSL_USER_DN': '',
@@ -29,13 +31,6 @@ class PkiAuthenticationTest(TestCase):
         self.request.META.get.side_effect = lambda *arg: self.meta_dict.get(arg[0], arg[1])
 
         self.pki_authentication = pkiauth.PkiAuthentication()
-
-    @classmethod
-    def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
-        data_gen.run()
 
     def test_authenticate_is_secure_false(self):
         self.request.is_secure.side_effect = lambda *arg: False

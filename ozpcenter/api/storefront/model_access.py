@@ -3,24 +3,21 @@ Storefront and Metadata Model Access
 """
 import logging
 
-from django.core.urlresolvers import reverse
-from django.db import connection
-from django.db.models import Count
-from django.db.models.functions import Lower
+from django.db.models import Count, Prefetch
 from django.db.models import F
+from django.db.models.functions import Lower
 
-import msgpack
-
-# import ozpcenter.api.listing.serializers as listing_serializers
-from ozpcenter.utils import str_to_bool
 from ozpcenter import models
-from ozpcenter.pipe import pipes
+from ozpcenter.api.serializers import ListingTypeSerializer, CustomFieldSerializer
 from ozpcenter.pipe import pipeline
+from ozpcenter.pipe import pipes
 from ozpcenter.recommend import recommend_utils
 from ozpcenter.recommend.recommend import RecommenderProfileResultSet
-
+# import ozpcenter.api.listing.serializers as listing_serializers
+from ozpcenter.utils import str_to_bool
 
 logger = logging.getLogger('ozp-center.' + str(__name__))
+
 
 # TODO: Finish in future to increase speed
 # def dictfetchall(cursor):
@@ -304,7 +301,8 @@ def get_storefront_recommended(request_profile, pre_fetch=True, randomize_recomm
     listing_ids_list = [1,5,6,7]
     request_profile = Profile.objects.first()
     """
-    recommender_profile_result_set = RecommenderProfileResultSet.from_profile_instance(request_profile, randomize_recommended)
+    recommender_profile_result_set = RecommenderProfileResultSet.from_profile_instance(request_profile,
+                                                                                       randomize_recommended)
     recommender_profile_result_set.process()
     recommended_listings = recommender_profile_result_set.recommended_listings
 
@@ -321,13 +319,13 @@ def get_storefront_featured(request_profile, pre_fetch=True):
     # Get Featured Listings
     featured_listings_raw = models.Listing.objects.for_user_organization_minus_security_markings(
         username).filter(
-            is_featured=True,
-            approval_status=models.Listing.APPROVED,
-            is_enabled=True,
-            is_deleted=False).order_by(F('featured_date').desc(nulls_last=True))
+        is_featured=True,
+        approval_status=models.Listing.APPROVED,
+        is_enabled=True,
+        is_deleted=False).order_by(F('featured_date').desc(nulls_last=True))
 
     featured_listings = pipeline.Pipeline(recommend_utils.ListIterator([listing for listing in featured_listings_raw]),
-                           [pipes.ListingPostSecurityMarkingCheckPipe(username)]).to_list()
+                                          [pipes.ListingPostSecurityMarkingCheckPipe(username)]).to_list()
     return featured_listings
 
 
@@ -344,8 +342,8 @@ def get_storefront_recent(request_profile, pre_fetch=True):
         is_deleted=False)
 
     recent_listings = pipeline.Pipeline(recommend_utils.ListIterator([listing for listing in recent_listings_raw]),
-                                      [pipes.ListingPostSecurityMarkingCheckPipe(username),
-                                       pipes.LimitPipe(24)]).to_list()
+                                        [pipes.ListingPostSecurityMarkingCheckPipe(username),
+                                         pipes.LimitPipe(24)]).to_list()
     return recent_listings
 
 
@@ -357,13 +355,14 @@ def get_storefront_most_popular(request_profile, pre_fetch=True):
     # Get most popular listings via a weighted average
     most_popular_listings_raw = models.Listing.objects.for_user_organization_minus_security_markings(
         username).filter(
-            approval_status=models.Listing.APPROVED,
-            is_enabled=True,
-            is_deleted=False).order_by('-avg_rate', '-total_reviews')
+        approval_status=models.Listing.APPROVED,
+        is_enabled=True,
+        is_deleted=False).order_by('-avg_rate', '-total_reviews')
 
-    most_popular_listings = pipeline.Pipeline(recommend_utils.ListIterator([listing for listing in most_popular_listings_raw]),
-                                      [pipes.ListingPostSecurityMarkingCheckPipe(username),
-                                       pipes.LimitPipe(36)]).to_list()
+    most_popular_listings = pipeline.Pipeline(
+        recommend_utils.ListIterator([listing for listing in most_popular_listings_raw]),
+        [pipes.ListingPostSecurityMarkingCheckPipe(username),
+         pipes.LimitPipe(36)]).to_list()
     return most_popular_listings
 
 
@@ -433,6 +432,79 @@ def values_query_set_to_dict(vqs):
     return [item for item in vqs]
 
 
+def get_listing_types():
+    custom_fields = models.CustomField.objects \
+        .select_related('type')
+
+    listing_types = models.ListingType.objects \
+        .prefetch_related(Prefetch('custom_fields', queryset=custom_fields))
+
+    return ListingTypeSerializer(listing_types, many=True).data
+
+
+def get_custom_fields_all_types():
+    custom_fields = models.CustomField.objects \
+        .select_related('type') \
+        .filter(all_listing_types=True)
+
+    return CustomFieldSerializer(custom_fields, many=True).data
+
+
+def get_intents():
+    intents_qs = models.Intent.objects.all() \
+        .values('id',
+                'action',
+                'media_type',
+                'label',
+                'icon')
+
+    intents = values_query_set_to_dict(intents_qs)
+
+    for intent in intents:
+        # i['icon'] = models.Image.objects.get(id=i['icon']).image_url()
+        intent['icon'] = '/TODO'
+
+    return intents
+
+
+def get_contact_types():
+    contact_types_qs = models.ContactType.objects.all() \
+        .values('name',
+                'required')
+
+    return values_query_set_to_dict(contact_types_qs)
+
+
+def get_agencies(username):
+    agency_listing_count_queryset = models.Listing.objects \
+        .for_user(username) \
+        .filter(approval_status=models.Listing.APPROVED, is_enabled=True)
+
+    agency_listing_count_queryset = agency_listing_count_queryset \
+        .values('agency__id',
+                'agency__title',
+                'agency__short_name',
+                'agency__icon') \
+        .annotate(listing_count=Count('agency__id')) \
+        .order_by('agency__short_name')
+
+    return [{'id': record['agency__id'],
+             'title': record['agency__title'],
+             'short_name': record['agency__short_name'],
+             'icon': record['agency__icon'],
+             'listing_count': record['listing_count']} for record in agency_listing_count_queryset]
+
+
+def get_categories():
+    categories_qs = models.Category.objects.all() \
+        .values('id',
+                'title',
+                'description') \
+        .order_by(Lower('title'))
+
+    return values_query_set_to_dict(categories_qs)
+
+
 def get_metadata(username):
     """
     Returns metadata including:
@@ -441,39 +513,16 @@ def get_metadata(username):
         * listing types
         * intents
         * contact types
-
+        * custom fields marked as "all listing types"
     Key: metadata
     """
     try:
-        data = {}
-        data['categories'] = values_query_set_to_dict(models.Category.objects.all().values(
-            'id', 'title', 'description').order_by(Lower('title')))
+        return {'categories': get_categories(),
+                'listing_types': get_listing_types(),
+                'contact_types': get_contact_types(),
+                'intents': get_intents(),
+                'agencies': get_agencies(username),
+                'custom_fields_all_types': get_custom_fields_all_types()}
 
-        data['listing_types'] = values_query_set_to_dict(models.ListingType.objects.all().values(
-            'title', 'description'))
-
-        data['contact_types'] = values_query_set_to_dict(models.ContactType.objects.all().values(
-            'name', 'required'))
-
-        data['intents'] = values_query_set_to_dict(models.Intent.objects.all().values(
-            'action', 'media_type', 'label', 'icon', 'id'))
-
-        agency_listing_count_queryset = models.Listing.objects.for_user(username).filter(approval_status=models.Listing.APPROVED, is_enabled=True)
-        agency_listing_count_queryset = agency_listing_count_queryset.values('agency__id',
-                                                                        'agency__title',
-                                                                        'agency__short_name',
-                                                                        'agency__icon').annotate(listing_count=Count('agency__id')).order_by('agency__short_name')
-
-        data['agencies'] = [{'id': record['agency__id'],
-                            'title': record['agency__title'],
-                            'short_name': record['agency__short_name'],
-                            'icon': record['agency__icon'],
-                            'listing_count': record['listing_count']} for record in agency_listing_count_queryset]
-
-        for i in data['intents']:
-            # i['icon'] = models.Image.objects.get(id=i['icon']).image_url()
-            i['icon'] = '/TODO'
-
-        return data
     except Exception as e:
         return {'error': True, 'msg': 'Error getting metadata: {0!s}'.format(str(e))}

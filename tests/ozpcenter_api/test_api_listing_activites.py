@@ -1,33 +1,22 @@
-"""
-Tests for listing endpoints
-"""
 import json
 
 from django.test import override_settings
-from rest_framework import status
-from tests.ozp.cases import APITestCase
 
-from ozpcenter import model_access as generic_model_access
 from ozpcenter import models
 from ozpcenter.scripts import sample_data_generator as data_gen
+from tests.ozp.cases import APITestCase
 from tests.ozpcenter.helper import APITestHelper
 
 
 @override_settings(ES_ENABLED=False)
 class ListingActivitiesApiTest(APITestCase):
 
-    def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
-        pass
-
     @classmethod
     def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
         data_gen.run()
+
+    def setUp(self):
+        pass
 
     def test_listing_activities(self):
         action_log = []

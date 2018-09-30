@@ -1,36 +1,25 @@
-"""
-Tests for listing endpoints
-"""
-from django.test import override_settings
 from unittest import skip
 
-from rest_framework import status
-from tests.ozp.cases import APITestCase
+from django.test import override_settings
 
-from ozpcenter import model_access as generic_model_access
 from ozpcenter.scripts import sample_data_generator as data_gen
+from tests.ozp.cases import APITestCase
 from tests.ozpcenter.data_util import ListingFile
+from tests.ozpcenter.helper import APITestHelper
 from tests.ozpcenter.helper import validate_listing_map_keys
 from tests.ozpcenter.helper import validate_listing_map_keys_list
 from tests.ozpcenter.helper import validate_listing_search_keys_list
-from tests.ozpcenter.helper import APITestHelper
 
 
 @override_settings(ES_ENABLED=False)
 class ListingSearchApiTest(APITestCase):
 
-    def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
-        pass
-
     @classmethod
     def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
         data_gen.run()
+
+    def setUp(self):
+        pass
 
     def test_search_categories_single_with_space(self):
         url = '/api/listings/search/?category={}'.format('Health and Fitness')
@@ -38,8 +27,8 @@ class ListingSearchApiTest(APITestCase):
 
         titles = sorted([i['title'] for i in response.data])
         listings_from_file = ListingFile.filter_listings(is_enabled=True,
-                                        approval_status='APPROVED',
-                                        categories__in=['Health and Fitness'])
+                                                         approval_status='APPROVED',
+                                                         categories__in=['Health and Fitness'])
         sorted_listings_from_file = sorted([listing['title'] for listing in listings_from_file])
         # TODO: TEST listing_title = Newspaper when is_private = True
         self.assertEqual(titles, sorted_listings_from_file)
@@ -50,8 +39,8 @@ class ListingSearchApiTest(APITestCase):
 
         titles = sorted([i['title'] for i in response.data])
         listings_from_file = ListingFile.filter_listings(is_enabled=True,
-                                        approval_status='APPROVED',
-                                        categories__in=['Health and Fitness', 'Communication'])
+                                                         approval_status='APPROVED',
+                                                         categories__in=['Health and Fitness', 'Communication'])
         sorted_listings_from_file = sorted([listing['title'] for listing in listings_from_file])
 
         self.assertEqual(titles, sorted_listings_from_file)
@@ -84,8 +73,8 @@ class ListingSearchApiTest(APITestCase):
 
         titles = sorted([i['title'] for i in response.data])
         listings_from_file = ListingFile.filter_listings(is_enabled=True,
-                                        approval_status='APPROVED',
-                                        listing_type='Web Application')
+                                                         approval_status='APPROVED',
+                                                         listing_type='Web Application')
         sorted_listings_from_file = sorted([listing['title'] for listing in listings_from_file])
         self.assertEqual(titles, sorted_listings_from_file)
 
@@ -95,8 +84,8 @@ class ListingSearchApiTest(APITestCase):
 
         titles = sorted([i['title'] for i in response.data])
         listings_from_file = ListingFile.filter_listings(is_enabled=True,
-                                        approval_status='APPROVED',
-                                        tags__in=['demo_tag'])
+                                                         approval_status='APPROVED',
+                                                         tags__in=['demo_tag'])
         sorted_listings_from_file = sorted([listing['title'] for listing in listings_from_file])
 
         self.assertEqual(titles, sorted_listings_from_file)
@@ -142,12 +131,12 @@ class ListingSearchApiTest(APITestCase):
                 {"email": "a@a.com", "secure_phone": "111-222-3434",
                  "unsecure_phone": "444-555-4545", "name": "me",
                  "contact_type": {"name": "Government"}
-                    },
+                 },
                 {"email": "b@b.com", "secure_phone": "222-222-3333",
                  "unsecure_phone": "555-555-5555", "name": "you",
                  "contact_type": {"name": "Military"}
-                    }
-                ],
+                 }
+            ],
             "security_marking": "UNCLASSIFIED",
             "listing_type": {"title": "Web Application"},
             "small_icon": {"id": 1},
@@ -157,29 +146,29 @@ class ListingSearchApiTest(APITestCase):
             "categories": [
                 {"title": "Business"},
                 {"title": "Education"}
-                ],
+            ],
             "owners": [
                 {"user": {"username": "wsmith"}},
                 {"user": {"username": "julia"}}
-                ],
+            ],
             "tags": [
                 {"name": "demo"},
                 {"name": "map"}
-                ],
+            ],
             "intents": [
                 {"action": "/application/json/view"},
                 {"action": "/application/json/edit"}
-                ],
+            ],
             "doc_urls": [
                 {"name": "wiki", "url": "http://www.google.com/wiki"},
                 {"name": "guide", "url": "http://www.google.com/guide"}
-                ],
+            ],
             "screenshots": [
                 {"small_image": {"id": 1}, "large_image": {"id": 2}, "description": "Test Description"},
                 {"small_image": {"id": 3}, "large_image": {"id": 4}, "description": "Test Description"}
-                ]
+            ]
 
-            }
+        }
 
         response = APITestHelper.request(self, url, 'PUT', username='bigbrother', data=data, status_code=200, validator=validate_listing_map_keys)
 
@@ -222,9 +211,6 @@ class ListingSearchApiTest(APITestCase):
             # self.assertEqual(titles, all_titles[:limit_number])
 
     def test_search_offset_limit(self):
-        """
-        test_search_offset_limit
-        """
         # TODO rivera-20171026: Figure out how to make sure offset is working
         for limit_number in [1, 5, 10]:
             url = '/api/listings/search/?offset=1&limit={}'.format(limit_number)

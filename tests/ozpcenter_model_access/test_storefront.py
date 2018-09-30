@@ -1,30 +1,22 @@
-"""
-Utils tests
-"""
-from django.test import override_settings
-from django.test import TestCase
 from unittest.mock import MagicMock
 
+from django.test import TestCase
+from django.test import override_settings
+
+import ozpcenter.api.storefront.model_access as model_access
 from ozpcenter import models
 from ozpcenter.scripts import sample_data_generator as data_gen
-import ozpcenter.api.storefront.model_access as model_access
 
 
 @override_settings(ES_ENABLED=False)
 class StorefrontTest(TestCase):
 
-    def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
-        pass
-
     @classmethod
     def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
         data_gen.run()
+
+    def setUp(self):
+        pass
 
     def test_get_storefront(self):
         """
@@ -94,4 +86,4 @@ class StorefrontTest(TestCase):
     #     request.query_params.get.side_effect = lambda *arg: True
 
     #     data = model_access.get_user_listings(request.user, request)
-        # TODO: Finish test
+    # TODO: Finish test

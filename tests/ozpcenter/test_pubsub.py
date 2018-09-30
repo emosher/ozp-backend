@@ -1,8 +1,5 @@
-"""
-pubsub tests
-"""
-from django.test import override_settings
 from django.test import TestCase
+from django.test import override_settings
 
 from ozpcenter import pubsub
 
@@ -39,9 +36,6 @@ class ObserverTestTwo(pubsub.Observer):
 class PubSubTest(TestCase):
 
     def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
         pass
 
     def test_observer_not_implemented_error(self):

@@ -5,30 +5,21 @@ TODO: Make below code work
 if not len_pipe.has_next():
     break
 """
-from django.test import override_settings
 from django.test import TestCase
+from django.test import override_settings
 
-from ozpcenter.scripts import sample_data_generator as data_gen
-from ozpcenter.recommend import recommend_utils
 from ozpcenter.pipe import pipes
-from ozpcenter.pipe import pipeline
-from ozpcenter.recommend.graph import Graph
+from ozpcenter.recommend import recommend_utils
 
 
 @override_settings(ES_ENABLED=False)
 class PipeTest(TestCase):
 
-    def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
-        pass
-
     @classmethod
     def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
+        pass
+
+    def setUp(self):
         pass
 
     def _iterate_pipe(self, current_pipe):

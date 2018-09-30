@@ -1,102 +1,67 @@
-"""
-Custom permissions for API endpoints
+import abc
+from typing import List
 
-Can do things like if view.action == 'create'
-"""
+from django.contrib.auth.models import User
 from rest_framework import permissions
-import ozpcenter.model_access as model_access
 
+from ozpcenter.models import Profile
 from plugins import plugin_manager
 
+SAFE_METHODS = ["GET", "HEAD", "OPTIONS"]
 
-SAFE_METHODS = ['GET', 'HEAD', 'OPTIONS']
 
-
-class IsAppsMallStewardOrReadOnly(permissions.BasePermission):
-
+class BaseAuthentication(permissions.BasePermission, metaclass=abc.ABCMeta):
     def has_permission(self, request, view):
         if not request.user.is_authenticated():
             return False
 
         ozp_authorization = plugin_manager.get_system_authorization_plugin()
         ozp_authorization.authorization_update(request.user.username, request=request)
-        user_profile = model_access.get_profile(request.user.username)
-        if (request.method in SAFE_METHODS or
-                user_profile.highest_role() in ['APPS_MALL_STEWARD']):
-            return True
-        return False
 
+        return self.has_authorization(request, view)
 
-class IsOrgStewardOrReadOnly(permissions.BasePermission):
-
-    def has_permission(self, request, view):
-        if not request.user.is_authenticated():
-            return False
-
-        ozp_authorization = plugin_manager.get_system_authorization_plugin()
-        ozp_authorization.authorization_update(request.user.username, request=request)
-        user_profile = model_access.get_profile(request.user.username)
-        if (request.method in SAFE_METHODS or
-                user_profile.highest_role() in ['APPS_MALL_STEWARD', 'ORG_STEWARD']):
-            return True
-        return False
-
-
-class IsUser(permissions.BasePermission):
-    """
-    Global permission check if current user is a User
-    """
-
-    def has_permission(self, request, view):
-        if not request.user.is_authenticated():
-            return False
-
-        ozp_authorization = plugin_manager.get_system_authorization_plugin()
-        ozp_authorization.authorization_update(request.user.username, request=request)
-        profile = model_access.get_profile(request.user.username)
-        if profile is None:
-            return False
-        if profile.highest_role() in ['USER', 'ORG_STEWARD', 'APPS_MALL_STEWARD']:
-            return True
-        else:
-            return False
-
-
-class IsOrgSteward(permissions.BasePermission):
-    """
-    Global permission check if current user is an OrgSteward
-    """
-
-    def has_permission(self, request, view):
-        if not request.user.is_authenticated():
-            return False
-
-        ozp_authorization = plugin_manager.get_system_authorization_plugin()
-        ozp_authorization.authorization_update(request.user.username, request=request)
-        profile = model_access.get_profile(request.user.username)
-        if profile is None:
-            return False
-        if profile.highest_role() in ['ORG_STEWARD', 'APPS_MALL_STEWARD']:
-            return True
-        else:
-            return False
+    @abc.abstractmethod
+    def has_authorization(self, request, view):
+        pass
 
 
 class IsAppsMallSteward(permissions.BasePermission):
-    """
-    Global permission check if current user is an AppsMallSteward
-    """
 
     def has_permission(self, request, view):
-        if not request.user.is_authenticated():
-            return False
+        return has_any_role(request.user, [Profile.AML_STEWARD_ROLE])
 
-        ozp_authorization = plugin_manager.get_system_authorization_plugin()
-        ozp_authorization.authorization_update(request.user.username, request=request)
-        profile = model_access.get_profile(request.user.username)
-        if profile is None:
-            return False
-        if profile.highest_role() == 'APPS_MALL_STEWARD':
+
+class IsAppsMallStewardOrReadOnly(BaseAuthentication):
+    def has_authorization(self, request, view):
+        return (request.method in SAFE_METHODS or
+                has_any_role(request.user, [Profile.AML_STEWARD_ROLE]))
+
+
+class IsAmlStewardOrHasExportRole(BaseAuthentication):
+    def has_authorization(self, request, view):
+        return has_any_role(request.user, [Profile.API_EXPORT_ROLE, Profile.AML_STEWARD_ROLE])
+
+
+class IsOrgSteward(BaseAuthentication):
+    def has_authorization(self, request, view):
+        return has_any_role(request.user, [Profile.AML_STEWARD_ROLE, Profile.ORG_STEWARD_ROLE])
+
+
+class IsOrgStewardOrReadOnly(BaseAuthentication):
+    def has_authorization(self, request, view):
+        return (request.method in SAFE_METHODS or
+                has_any_role(request.user, [Profile.AML_STEWARD_ROLE, Profile.ORG_STEWARD_ROLE]))
+
+
+class IsUser(BaseAuthentication):
+    def has_authorization(self, request, view):
+        return has_any_role(request.user, [Profile.AML_STEWARD_ROLE, Profile.ORG_STEWARD_ROLE, Profile.USER_ROLE, Profile.API_EXPORT_ROLE])
+
+
+def has_any_role(user: User, role_names: List[str]) -> bool:
+    user_role_names = [role.name for role in user.groups.all()]
+
+    for role in user_role_names:
+        if role in role_names:
             return True
-        else:
-            return False
+    return False

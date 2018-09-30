@@ -24,9 +24,5 @@ msgpack-python==0.4.8
 
 django-cas-ng==3.5.9
 
-# celery
-celery==4.1.0
-amqp==2.2.2
-
 # JWT
 djangorestframework-jwt==1.11.0

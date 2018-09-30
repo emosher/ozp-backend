@@ -1,30 +1,19 @@
-"""
-Tests for intent endpoints
-"""
 from django.test import override_settings
-from rest_framework import status
-from tests.ozp.cases import APITestCase
 
-from tests.ozpcenter.helper import APITestHelper
-from ozpcenter import model_access as generic_model_access
 from ozpcenter.scripts import sample_data_generator as data_gen
+from tests.ozp.cases import APITestCase
+from tests.ozpcenter.helper import APITestHelper
 
 
 @override_settings(ES_ENABLED=False)
 class IntentApiTest(APITestCase):
 
-    def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
-        self
-
     @classmethod
     def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
         data_gen.run()
+
+    def setUp(self):
+        pass
 
     def test_get_intent_list(self):
         url = '/api/intent/'
@@ -57,8 +46,8 @@ class IntentApiTest(APITestCase):
         media_type = 'vnd.ozp-intent-v2+json.json'
         label = 'mylabel'
         data = {'action': action,
-            'media_type': media_type, 'label': label,
-            'icon': {'id': 1, 'security_marking': 'UNCLASSIFIED'}}
+                'media_type': media_type, 'label': label,
+                'icon': {'id': 1, 'security_marking': 'UNCLASSIFIED'}}
 
         response = APITestHelper.request(self, url, 'PUT', data=data, username='bigbrother', status_code=200)
 

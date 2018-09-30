@@ -1,7 +1,14 @@
 [run]
 omit =
-    ozpcenter/migrations/*
-    ozpcenter/scripts/*
-    ozpiwc/tst_iwc_compatible_server.py
+    **/__init__.py
+    ozp/_version.py
     ozp/roles_draft.py
     ozp/wsgi.py
+    ozp/celery.py
+    ozp/settings.py
+    ozpcenter/migrations/*
+    ozpcenter/scripts/*
+    ozpcenter/admin.py
+    ozpcenter/constants.py
+    ozpiwc/migrations/*
+    ozpiwc/tst_iwc_compatible_server.py

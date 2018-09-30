@@ -2,31 +2,24 @@
 Tests for data.api endpoints
 https://github.com/aml-development/ozp-iwc/wiki/PacketFormat
 """
-import json
 
 from django.test import override_settings
 from rest_framework import status
-from tests.ozp.cases import APITestCase
 
 from ozpcenter import model_access as generic_model_access
 from ozpcenter.scripts import sample_data_generator as data_gen
+from tests.ozp.cases import APITestCase
 
 
 @override_settings(ES_ENABLED=False)
 class DataApiTest(APITestCase):
 
-    def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
-        self
-
     @classmethod
     def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
         data_gen.run()
+
+    def setUp(self):
+        pass
 
     def test_data_api_non_existent(self):
         user = generic_model_access.get_profile('wsmith').user

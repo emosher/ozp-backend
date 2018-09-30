@@ -121,20 +121,43 @@ class ShortUserSerializer(serializers.ModelSerializer):
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-    organizations = AgencySerializer(many=True)
-    stewarded_organizations = AgencySerializer(many=True)
-    user = UserSerializer()
 
     class Meta:
         model = models.Profile
-        fields = ('id', 'display_name', 'bio', 'organizations',
-            'stewarded_organizations', 'user', 'highest_role', 'dn',
-            'center_tour_flag', 'hud_tour_flag', 'webtop_tour_flag',
-            'email_notification_flag', 'listing_notification_flag', 'subscription_notification_flag',
-            'leaving_ozp_warning_flag', 'is_beta_user')
+        fields = (
+            'id',
+            'display_name',
+            'bio',
+            'organizations',
+            'stewarded_organizations',
+            'user',
+            'highest_role',
+            'dn',
+            'center_tour_flag',
+            'hud_tour_flag',
+            'webtop_tour_flag',
+            'email_notification_flag',
+            'listing_notification_flag',
+            'subscription_notification_flag',
+            'leaving_ozp_warning_flag',
+            'is_beta_user',
+            'is_external',
+        )
+        read_only_fields = (
+            'id',
+            'bio',
+            'organizations',
+            'user',
+            'highest_role',
+            'is_beta_user',
+            'is_external',
+        )
 
-        read_only_fields = ('id', 'bio', 'organizations', 'user',
-            'highest_role', 'is_beta_user')
+    organizations = AgencySerializer(many=True)
+
+    stewarded_organizations = AgencySerializer(many=True)
+
+    user = UserSerializer()
 
     def to_representation(self, data):
         access_control_instance = plugin_manager.get_system_access_control_plugin()

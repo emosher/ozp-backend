@@ -1,35 +1,32 @@
-"""
-Tests for listing endpoints
-"""
 from django.test import override_settings
 from rest_framework import status
-from tests.ozp.cases import APITestCase
 
+import ozpcenter.api.listing.model_access as model_access
 from ozpcenter import model_access as generic_model_access
 from ozpcenter import models
-from ozpcenter.utils import shorthand_dict
 from ozpcenter.scripts import sample_data_generator as data_gen
-import ozpcenter.api.listing.model_access as model_access
-from tests.ozpcenter.helper import validate_listing_map_keys
+from ozpcenter.utils import shorthand_dict
+from tests.ozp.cases import APITestCase
 from tests.ozpcenter.helper import APITestHelper
 from tests.ozpcenter.helper import ExceptionUnitTestHelper
+from tests.ozpcenter.helper import validate_listing_map_keys
+from tests.ozpcenter_api.api_client import ListingAPI
 
 
 @override_settings(ES_ENABLED=False)
 class ListingApiTest(APITestCase):
 
-    def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
-        self.maxDiff = None
-
     @classmethod
     def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
         data_gen.run()
+
+        cls.profile_bigbrother = generic_model_access.get_profile("bigbrother")
+        cls.profile_wsmith = generic_model_access.get_profile("wsmith")
+        cls.profile_jones = generic_model_access.get_profile("jones")
+
+    def setUp(self):
+        self.maxDiff = None
+        self.listing_api = ListingAPI(self.client)
 
     def test_create_listing_minimal(self):
         # create a new listing with minimal data (title)
@@ -81,16 +78,17 @@ class ListingApiTest(APITestCase):
             "usage_requirements": "None",
             "system_requirements": "None",
             "is_private": "true",
+            "is_exportable": "false",
             "feedback_score": 0,
             "contacts": [
                 {"email": "a@a.com", "secure_phone": "111-222-3434",
-                    "unsecure_phone": "444-555-4545", "name": "me",
-                    "contact_type": {"name": "Government"}
-                },
+                 "unsecure_phone": "444-555-4545", "name": "me",
+                 "contact_type": {"name": "Government"}
+                 },
                 {"email": "b@b.com", "secure_phone": "222-222-3333",
-                    "unsecure_phone": "555-555-5555", "name": "you",
-                    "contact_type": {"name": "Military"}
-                }
+                 "unsecure_phone": "555-555-5555", "name": "you",
+                 "contact_type": {"name": "Military"}
+                 }
             ],
             "security_marking": "UNCLASSIFIED",
             "listing_type": {"title": "Web Application"},
@@ -137,18 +135,24 @@ class ListingApiTest(APITestCase):
             {'key': 'usage_requirements', 'exclude': []},
             {'key': 'system_requirements', 'exclude': []},
             {'key': 'security_marking', 'exclude': []},
-            {'key': 'listing_type', 'exclude': []},
-            {'key': 'small_icon', 'exclude': ['security_marking', 'url']},
-            {'key': 'large_icon', 'exclude': ['security_marking', 'url']},
-            {'key': 'banner_icon', 'exclude': ['security_marking', 'url']},
-            {'key': 'large_banner_icon', 'exclude': ['security_marking', 'url']},
-            {'key': 'contacts', 'exclude': ['id', 'organization']},
-            {'key': 'categories', 'exclude': ['id', 'description']},
-            {'key': 'tags', 'exclude': ['id']},
-            {'key': 'owners', 'exclude': ['id', 'display_name']},
-            {'key': 'intents', 'exclude': ['id', 'icon', 'label', 'media_type']},
-            {'key': 'doc_urls', 'exclude': ['id']},
-            {'key': 'screenshots', 'exclude': ['small_image.security_marking', 'large_image.security_marking', 'small_image.url', 'large_image.url', 'order', 'description']},
+            {'key': 'listing_type', 'exclude': ['custom_fields', 'description', 'id', 'import_metadata']},
+            {'key': 'small_icon', 'exclude': ['security_marking', 'url', 'import_metadata']},
+            {'key': 'large_icon', 'exclude': ['security_marking', 'url', 'import_metadata']},
+            {'key': 'banner_icon', 'exclude': ['security_marking', 'url', 'import_metadata']},
+            {'key': 'large_banner_icon', 'exclude': ['security_marking', 'url', 'import_metadata']},
+            {'key': 'contacts', 'exclude': ['id', 'organization', 'import_metadata']},
+            {'key': 'categories', 'exclude': ['id', 'description', 'import_metadata']},
+            {'key': 'tags', 'exclude': ['id', 'import_metadata']},
+            {'key': 'owners', 'exclude': ['id', 'display_name', 'import_metadata']},
+            {'key': 'intents', 'exclude': ['id', 'icon', 'label', 'media_type', 'import_metadata']},
+            {'key': 'doc_urls', 'exclude': ['id', 'import_metadata']},
+            {'key': 'screenshots', 'exclude': ['small_image.security_marking',
+                                               'small_image.import_metadata',
+                                               'small_image.url',
+                                               'large_image.security_marking',
+                                               'large_image.import_metadata',
+                                               'large_image.url',
+                                               'order', 'description', 'import_metadata']},
         ]
 
         for key_to_compare_dict in compare_keys_data_exclude:
@@ -171,6 +175,7 @@ class ListingApiTest(APITestCase):
         self.assertEqual(response.data['approved_date'], None)
         self.assertEqual(response.data['approval_status'], models.Listing.IN_PROGRESS)
         self.assertEqual(response.data['is_enabled'], True)
+        self.assertEqual(response.data['is_exportable'], False)
         self.assertEqual(response.data['is_featured'], False)
         self.assertEqual(response.data['avg_rate'], 0.0)
         self.assertEqual(response.data['total_votes'], 0)
@@ -185,6 +190,66 @@ class ListingApiTest(APITestCase):
         self.assertTrue(response.data['edited_date'])
         self.assertEqual(response.data['is_bookmarked'], False)
         self.assertEqual(validate_listing_map_keys(response.data), [])
+
+    def test_enable_exportable__allowed_for_aml_steward(self):
+        listing_id = 6
+        user_profile = self.profile_bigbrother
+
+        status_code, listing = self.listing_api.get(listing_id, auth=user_profile)
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertFalse(listing["is_exportable"])
+
+        listing["is_exportable"] = True
+        status_code, response = self.listing_api.update(listing_id, listing, auth=user_profile)
+
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertTrue(response['is_exportable'])
+
+    def test__enable_exportable__allowed_for_org_steward(self):
+        listing_id = 1
+        user_profile = self.profile_wsmith
+
+        status_code, listing = self.listing_api.get(listing_id, auth=user_profile)
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertFalse(listing["is_exportable"])
+
+        listing["is_exportable"] = True
+        status_code, response = self.listing_api.update(listing_id, listing, auth=user_profile)
+
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertTrue(response['is_exportable'])
+
+    def test__enable_exportable__allowed_for_owning_user(self):
+        listing_id = 7
+        user_profile = self.profile_jones
+
+        status_code, listing = self.listing_api.get(listing_id, auth=user_profile)
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertFalse(listing["is_exportable"])
+
+        listing["is_exportable"] = True
+        status_code, response = self.listing_api.update(listing_id, listing, auth=user_profile)
+
+        self.assertEqual(status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response,
+                         ExceptionUnitTestHelper.permission_denied(
+                             "Only stewards can change is_exportable setting of a listing"))
+
+    def test__enable_exportable__denied_for_nonowner_user(self):
+        listing_id = 5
+        user_profile = self.profile_jones
+
+        status_code, listing = self.listing_api.get(listing_id, auth=user_profile)
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertFalse(listing["is_exportable"])
+
+        listing["is_exportable"] = True
+        status_code, response = self.listing_api.update(listing_id, listing, auth=user_profile)
+
+        self.assertEqual(status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response,
+                         ExceptionUnitTestHelper.permission_denied(
+                             "User (%s) is not an owner of this listing" % user_profile.user.username))
 
     def test_delete_listing(self):
         url = '/api/listing/1/'
@@ -266,18 +331,19 @@ class ListingApiTest(APITestCase):
             "usage_requirements": "Many new things",
             "system_requirements": "Good System",
             "is_private": "true",
+            "is_exportable": "false",
             "is_enabled": "false",
             "is_featured": "false",
             "feedback_score": 0,
             "contacts": [
                 {"email": "a@a.com", "secure_phone": "111-222-3434",
-                    "unsecure_phone": "444-555-4545", "name": "me",
-                    "contact_type": {"name": "Government"}
-                },
+                 "unsecure_phone": "444-555-4545", "name": "me",
+                 "contact_type": {"name": "Government"}
+                 },
                 {"email": "b@b.com", "secure_phone": "222-222-3333",
-                    "unsecure_phone": "555-555-5555", "name": "you",
-                    "contact_type": {"name": "Military"}
-                }
+                 "unsecure_phone": "555-555-5555", "name": "you",
+                 "contact_type": {"name": "Military"}
+                 }
             ],
             "security_marking": "SECRET",
             "listing_type": {"title": "Widget"},
@@ -331,18 +397,24 @@ class ListingApiTest(APITestCase):
             {'key': 'usage_requirements', 'exclude': []},
             {'key': 'system_requirements', 'exclude': []},
             {'key': 'security_marking', 'exclude': []},
-            {'key': 'listing_type', 'exclude': []},
-            {'key': 'small_icon', 'exclude': ['security_marking', 'url']},
-            {'key': 'large_icon', 'exclude': ['security_marking', 'url']},
-            {'key': 'banner_icon', 'exclude': ['security_marking', 'url']},
-            {'key': 'large_banner_icon', 'exclude': ['security_marking', 'url']},
-            {'key': 'contacts', 'exclude': ['id', 'organization']},
-            {'key': 'categories', 'exclude': ['id', 'description']},
-            {'key': 'tags', 'exclude': ['id']},
-            {'key': 'owners', 'exclude': ['id', 'display_name']},
-            {'key': 'intents', 'exclude': ['id', 'icon', 'label', 'media_type']},
-            {'key': 'doc_urls', 'exclude': ['id']},
-            {'key': 'screenshots', 'exclude': ['small_image.security_marking', 'large_image.security_marking', 'small_image.url', 'large_image.url', 'order']},
+            {'key': 'listing_type', 'exclude': ['custom_fields', 'description', 'id', 'import_metadata']},
+            {'key': 'small_icon', 'exclude': ['security_marking', 'url', 'import_metadata']},
+            {'key': 'large_icon', 'exclude': ['security_marking', 'url', 'import_metadata']},
+            {'key': 'banner_icon', 'exclude': ['security_marking', 'url', 'import_metadata']},
+            {'key': 'large_banner_icon', 'exclude': ['security_marking', 'url', 'import_metadata']},
+            {'key': 'contacts', 'exclude': ['id', 'organization', 'import_metadata']},
+            {'key': 'categories', 'exclude': ['id', 'description', 'import_metadata']},
+            {'key': 'tags', 'exclude': ['id', 'import_metadata']},
+            {'key': 'owners', 'exclude': ['id', 'display_name', 'import_metadata']},
+            {'key': 'intents', 'exclude': ['id', 'icon', 'label', 'media_type', 'import_metadata']},
+            {'key': 'doc_urls', 'exclude': ['id', 'import_metadata']},
+            {'key': 'screenshots', 'exclude': ['small_image.security_marking',
+                                               'small_image.import_metadata',
+                                               'small_image.url',
+                                               'large_image.security_marking',
+                                               'large_image.import_metadata',
+                                               'large_image.url',
+                                               'order', 'description', 'import_metadata']},
         ]
 
         for key_to_compare_dict in compare_keys_data_exclude:
@@ -373,6 +445,7 @@ class ListingApiTest(APITestCase):
         self.assertEqual(response.data['total_rate2'], 0)
         self.assertEqual(response.data['total_rate1'], 1)
         self.assertEqual(response.data['total_reviews'], 4)
+        self.assertEqual(response.data['is_exportable'], False)
         self.assertEqual(response.data['iframe_compatible'], False)
         self.assertEqual(response.data['required_listings'], None)
         self.assertTrue(response.data['edited_date'])
@@ -387,11 +460,11 @@ class ListingApiTest(APITestCase):
         activity_data = activity_response.data
 
         fields = ['title', 'description', 'description_short', 'version_name',
-            'usage_requirements', 'system_requirements', 'unique_name', 'what_is_new', 'launch_url',
-            'is_enabled', 'is_featured', 'is_private', 'feedback_score', 'doc_urls', 'contacts',
-            'screenshots', 'categories', 'owners', 'tags', 'small_icon',
-            'large_icon', 'banner_icon', 'large_banner_icon', 'security_marking',
-            'listing_type', 'approval_status', 'intents']
+                  'usage_requirements', 'system_requirements', 'unique_name', 'what_is_new', 'launch_url',
+                  'is_enabled', 'is_featured', 'is_private', 'is_exportable', 'feedback_score', 'doc_urls', 'contacts',
+                  'screenshots', 'categories', 'owners', 'tags', 'small_icon',
+                  'large_icon', 'banner_icon', 'large_banner_icon', 'security_marking',
+                  'listing_type', 'approval_status', 'intents']
 
         changed_found_fields = []
 
@@ -401,7 +474,7 @@ class ListingApiTest(APITestCase):
                     # Field Set 1
                     temp_change_fields = ['title', 'description', 'description_short',
                         'version_name', 'usage_requirements', 'system_requirements', 'what_is_new', 'unique_name', 'launch_url', 'feedback_score',
-                        'is_private', 'is_featured', 'listing_type', 'security_marking']
+                                          'is_private', 'is_exportable', 'is_featured', 'listing_type', 'security_marking']
 
                     for temp_field in temp_change_fields:
                         if change['field_name'] == temp_field:
@@ -436,7 +509,7 @@ class ListingApiTest(APITestCase):
                             changed_found_fields.append(temp_field)
 
         difference_in_fields = sorted(list(set(fields) - set(changed_found_fields)))  # TODO: Better way to do this
-        self.assertEqual(difference_in_fields, ['approval_status', 'feedback_score', 'is_enabled', 'is_featured'])
+        self.assertEqual(difference_in_fields, ['approval_status', 'feedback_score', 'is_enabled', 'is_exportable', 'is_featured'])
 
     # TODO: def test_update_listing_full_access_control(self):
 
@@ -469,18 +542,19 @@ class ListingApiTest(APITestCase):
             "usage_requirements": "Many new things",
             "system_requirements": "Good System",
             "is_private": "true",
+            "is_exportable": "true",
             "is_enabled": "false",
             "is_featured": "false",
             "feedback_score": 0,
             "contacts": [
                 {"email": "a@a.com", "secure_phone": "111-222-3434",
-                    "unsecure_phone": "444-555-4545", "name": "me",
-                    "contact_type": {"name": "Government"}
-                },
+                 "unsecure_phone": "444-555-4545", "name": "me",
+                 "contact_type": {"name": "Government"}
+                 },
                 {"email": "b@b.com", "secure_phone": "222-222-3333",
-                    "unsecure_phone": "555-555-5555", "name": "you",
-                    "contact_type": {"name": "Military"}
-                }
+                 "unsecure_phone": "555-555-5555", "name": "you",
+                 "contact_type": {"name": "Military"}
+                 }
             ],
             "security_marking": "SECRET",
             "listing_type": {"title": "Widget"},
@@ -525,55 +599,55 @@ class ListingApiTest(APITestCase):
     def test_z_create_update(self):
         url = '/api/listing/'
         data = {
-          "title": "test",
-          "screenshots": [],
-          "contacts": [
-            {
-              "name": "test1",
-              "email": "test1@domain.com",
-              "secure_phone": "240-544-8777",
-              "contact_type": {
-                "name": "Civilian"
-              }
+            "title": "test",
+            "screenshots": [],
+            "contacts": [
+                {
+                    "name": "test1",
+                    "email": "test1@domain.com",
+                    "secure_phone": "240-544-8777",
+                    "contact_type": {
+                        "name": "Civilian"
+                    }
+                },
+                {
+                    "name": "test2",
+                    "email": "test2@domain.com",
+                    "secure_phone": "240-888-7477",
+                    "contact_type": {
+                        "name": "Civilian"
+                    }
+                }
+            ],
+            "tags": [],
+            "owners": [
+                {
+                    "display_name": "Big Brother",
+                    "id": 4,
+                    "user": {
+                        "username": "bigbrother"
+                    }
+                }
+            ],
+            "agency": {
+                "short_name": "Miniluv",
+                "title": "Ministry of Love"
             },
-            {
-              "name": "test2",
-              "email": "test2@domain.com",
-              "secure_phone": "240-888-7477",
-              "contact_type": {
-                "name": "Civilian"
-              }
-            }
-          ],
-          "tags": [],
-          "owners": [
-            {
-              "display_name": "Big Brother",
-              "id": 4,
-              "user": {
-                "username": "bigbrother"
-              }
-            }
-          ],
-          "agency": {
-            "short_name": "Miniluv",
-            "title": "Ministry of Love"
-          },
-          "categories": [
-            {
-              "title": "Books and Reference"
-            }
-          ],
-          "intents": [],
-          "doc_urls": [],
-          "security_marking": "UNCLASSIFIED",  # //FOR OFFICIAL USE ONLY//ABCDE
-          "listing_type": {
-            "title": "Web Application"
-          },
-          "last_activity": {
-            "action": "APPROVED"
-          },
-          "required_listings": None
+            "categories": [
+                {
+                    "title": "Books and Reference"
+                }
+            ],
+            "intents": [],
+            "doc_urls": [],
+            "security_marking": "UNCLASSIFIED",  # //FOR OFFICIAL USE ONLY//ABCDE
+            "listing_type": {
+                "title": "Web Application"
+            },
+            "last_activity": {
+                "action": "APPROVED"
+            },
+            "required_listings": None
         }
 
         user = generic_model_access.get_profile('julia').user
@@ -586,77 +660,78 @@ class ListingApiTest(APITestCase):
         listing_id = response.data['id']
 
         data = {
-          "id": listing_id,
-          "title": "test",
-          "description": None,
-          "description_short": None,
-          "screenshots": [],
-          "contacts": [
-            {
-              "id": 4,
-              "contact_type": {
-                "name": "Government"
-              },
-              "secure_phone": "240-544-8777",
-              "unsecure_phone": None,
-              "email": "test1@domain.com",
-              "name": "test15",
-              "organization": None
+            "id": listing_id,
+            "title": "test",
+            "description": None,
+            "description_short": None,
+            "screenshots": [],
+            "contacts": [
+                {
+                    "id": 4,
+                    "contact_type": {
+                        "name": "Government"
+                    },
+                    "secure_phone": "240-544-8777",
+                    "unsecure_phone": None,
+                    "email": "test1@domain.com",
+                    "name": "test15",
+                    "organization": None
+                },
+                {
+                    "id": 5,
+                    "contact_type": {
+                        "name": "Civilian"
+                    },
+                    "secure_phone": "240-888-7477",
+                    "unsecure_phone": None,
+                    "email": "test2@domain.com",
+                    "name": "test2",
+                    "organization": None
+                }
+            ],
+            "avg_rate": 0,
+            "total_votes": 0,
+            "feedback_score": 0,
+            "tags": [],
+            "usage_requirements": None,
+            "system_requirements": None,
+            "version_name": None,
+            "launch_url": None,
+            "what_is_new": None,
+            "owners": [
+                {
+                    "display_name": "Big Brother",
+                    "id": 4,
+                    "user": {
+                        "username": "bigbrother"
+                    }
+                }
+            ],
+            "agency": {
+                "short_name": "Miniluv",
+                "title": "Ministry of Love"
             },
-            {
-              "id": 5,
-              "contact_type": {
-                "name": "Civilian"
-              },
-              "secure_phone": "240-888-7477",
-              "unsecure_phone": None,
-              "email": "test2@domain.com",
-              "name": "test2",
-              "organization": None
-            }
-          ],
-          "avg_rate": 0,
-          "total_votes": 0,
-          "feedback_score": 0,
-          "tags": [],
-          "usage_requirements": None,
-          "system_requirements": None,
-          "version_name": None,
-          "launch_url": None,
-          "what_is_new": None,
-          "owners": [
-            {
-              "display_name": "Big Brother",
-              "id": 4,
-              "user": {
-                "username": "bigbrother"
-              }
-            }
-          ],
-          "agency": {
-            "short_name": "Miniluv",
-            "title": "Ministry of Love"
-          },
-          "is_enabled": True,
-          "categories": [
-            {
-              "title": "Books and Reference"
-            }
-          ],
-          "intents": [],
-          "doc_urls": [],
-          "approval_status": "IN_PROGRESS",
-          "is_featured": False,
-          "is_private": False,
-          "security_marking": "UNCLASSIFIED//FOR OFFICIAL USE ONLY//ABCDE",
-          "listing_type": {
-            "title": "Web Application"
-          },
-          "unique_name": None,
-          "last_activity": {
-            "action": "APPROVED"
-          },
-          "required_listings": None
+            "is_enabled": True,
+            "categories": [
+                {
+                    "title": "Books and Reference"
+                }
+            ],
+            "intents": [],
+            "doc_urls": [],
+            "approval_status": "IN_PROGRESS",
+            "is_featured": False,
+            "is_private": False,
+            "is_exportable": False,
+            "security_marking": "UNCLASSIFIED//FOR OFFICIAL USE ONLY//ABCDE",
+            "listing_type": {
+                "title": "Web Application"
+            },
+            "unique_name": None,
+            "last_activity": {
+                "action": "APPROVED"
+            },
+            "required_listings": None
         }
 
         url = '/api/listing/{0!s}/'.format(listing_id)
@@ -754,18 +829,18 @@ class ListingApiTest(APITestCase):
             "enabled": 183,
             "REJECTED": 0,
             "organizations": {
-              "1": 44,
-              "2": 42,
-              "3": 49,
-              "4": 37,
-              "5": 5,
-              "6": 3,
-              "7": 2,
-              "8": 3,
-              "9": 2
+                "1": 44,
+                "2": 42,
+                "3": 49,
+                "4": 37,
+                "5": 5,
+                "6": 3,
+                "7": 2,
+                "8": 3,
+                "9": 2
             },
             "total": 187
-          }
+        }
         }
         self.assertEqual(last_item, expected_item)
     # TODO: test_counts_in_listings - 2ndparty
@@ -783,7 +858,7 @@ class ListingApiTest(APITestCase):
     def test_create_listing_with_invalid_agency(self):
         url = '/api/listing/'
         data = {'title': 'test app', 'security_marking': 'UNCLASSIFIED',
-            'agency': {'title': 'Ministry of NONE'}}
+                'agency': {'title': 'Ministry of NONE'}}
 
         user = generic_model_access.get_profile('julia').user
         self.client.force_authenticate(user=user)

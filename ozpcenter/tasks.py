@@ -1,6 +1,7 @@
 from __future__ import absolute_import, unicode_literals
+import requests
 from celery.utils.log import get_task_logger
-from celery import shared_task
+from celery import shared_task, task
 from django.core import mail
 from django.template import Context
 from django.template import Template
@@ -10,6 +11,114 @@ from ozpcenter import models
 from ozpcenter.utils import millis
 
 logger = get_task_logger(__name__)
+
+
+## Import Task
+
+from ozpcenter.api.imports.service import ImportTask as ImportTaskService
+from django_celery_beat.models import PeriodicTask, IntervalSchedule
+import json
+
+
+@shared_task
+def collect_and_schedule_import_tasks():
+    """
+    Collect all import_task (enabled/disabled)
+    This is scheduled in settings.py
+    """
+
+    all_tasks = models.ImportTask.objects.find_all().values()
+    all_tasks = [task for task in all_tasks]
+
+    update_create_scheduled_tasks(all_tasks)
+
+
+@shared_task
+def update_create_scheduled_tasks(tasks):
+    """
+    Schedule/update all tasks 
+    """
+
+    if not tasks:
+        return logger.info("No tasks to schedule")
+
+    for task in tasks:
+        name     = task['name']
+        task_id  = task['id']
+
+        try:
+            schedule = IntervalSchedule.objects.get(id=task['exec_interval_id'])
+            PeriodicTask.objects.update_or_create(
+                name="Name: %s ImportTask ID: %s" % (name, task_id),
+                defaults = {
+                    "interval": schedule,
+                    "task": 'ozpcenter.tasks.run_import_task',
+                    "kwargs": json.dumps({
+                        "import_task_id": task_id,
+                    }),
+                    "enabled": task['enabled'],
+                }
+            )
+            logger.info("\nPeriod Task: %s - Updated" % name)
+
+        except Exception as e:
+            logger.info("Exception(Task Scheduler): Task: %s Exception: %s" % (name, e))
+
+
+@task(name='ozpcenter.tasks.run_import_task')
+def run_import_task(import_task_id):
+    """
+    Run import task
+    """
+    try: 
+        task = models.ImportTask.objects.find_by_id(import_task_id)
+        import_data = get_import_data(task)
+        result = ImportTaskService(import_data.json(), task.affiliated_store).run()
+        errors = result['errors']
+        empty_result = all(value == [] for value in result.values())
+
+        if empty_result:
+            models.ImportTaskResult.objects.create_result(import_task_id, 'Pass', 'Empty Result')
+        
+        if len(errors) == 0:
+            models.ImportTaskResult.objects.create_result(import_task_id, 'Pass', 'Import Successful')
+
+        else:
+            models.ImportTaskResult.objects.create_result(import_task_id, 'Fail',
+                                                        "Errors Found: %s" % (
+                                                        errors))
+
+    except Exception as e:
+        models.ImportTaskResult.objects.create_result(import_task_id, 'Fail',
+                                                    "Exception(Import Task): Task_ID: %s Exception: %s" %
+                                                    (import_task_id, e))
+        logger.info("Exception(Import Task): Task_ID: %s Exception: %s" % (import_task_id, e))
+        print("Exception: %s" % e)
+
+
+def get_import_data(task):
+    """
+    Retrieve import data 
+    """
+    url_params = task.extra_url_params
+    url = task.url
+    if url_params:
+        url = url + url_params
+        
+    result = requests.get(url, timeout=180)
+
+    if result.status_code != 200:
+        msg = "Connection Error: Expected status code 200, but received {}".format(result.status_code)
+        logger.info("Exception(Get Import Data): TASK_ID: %s Failed: %s" % (task.id, msg))
+        raise requests.ConnectionError(msg)
+
+    if result.status_code == 200:
+        if settings.DEBUG:
+            print(result.json())
+        return result
+
+
+# End Import Task 
 
 
 def create_email_object(current_profile_email, notifications_mailbox_non_email_count):

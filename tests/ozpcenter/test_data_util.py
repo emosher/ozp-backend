@@ -1,5 +1,5 @@
-from django.test import override_settings
 from django.test import TestCase
+from django.test import override_settings
 
 from tests.ozpcenter import data_util
 
@@ -8,9 +8,6 @@ from tests.ozpcenter import data_util
 class DataUtilTest(TestCase):
 
     def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
         pass
 
     def test_file_query_load_yaml_profile(self):

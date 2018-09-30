@@ -71,9 +71,14 @@ class ProfileViewSet(viewsets.ModelViewSet):
         Delete a Profile by ID
     """
 
-    permission_classes = (permissions.IsOrgStewardOrReadOnly,)
     serializer_class = serializers.ProfileSerializer
-    filter_backends = (filters.SearchFilter,)
+
+    permission_classes = (permissions.IsOrgStewardOrReadOnly,)
+
+    filter_backends = (filters.OrderingFilter, filters.SearchFilter,)
+
+    ordering = ('id',)
+
     search_fields = ('dn',)
 
     def get_queryset(self):

@@ -1,32 +1,23 @@
-"""
-Listing tests
-"""
-from django.test import override_settings
 from django.test import TestCase
+from django.test import override_settings
 
-from ozpcenter.scripts import sample_data_generator as data_gen
 import ozpcenter.api.listing.model_access as model_access
-from ozpcenter import errors
 import ozpcenter.model_access as generic_model_access
+from ozpcenter import errors
 from ozpcenter import models
+from ozpcenter.scripts import sample_data_generator as data_gen
 from tests.ozpcenter.data_util import FileQuery
 
 
 @override_settings(ES_ENABLED=False)
 class ListingTest(TestCase):
 
-    def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
-        pass
-
     @classmethod
     def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
         data_gen.run()
+
+    def setUp(self):
+        pass
 
     # Deprecated: For user, do post filter using pipes
     # def test_get_listings_for_user(self):
@@ -121,7 +112,7 @@ class ListingTest(TestCase):
         listing_activities = air_mail.listing_activities.filter(action=models.ListingActivity.SUBMITTED)
         submitted_activity = listing_activities[0]
         self.assertEqual(submitted_activity.author.user.username,
-            author.user.username)
+                         author.user.username)
 
     def test_approve_listing_by_org_steward(self):
         org_steward = generic_model_access.get_profile('wsmith')
@@ -297,11 +288,11 @@ class ListingTest(TestCase):
     def test_screenshots_to_string_object(self):
         screenshots = models.Screenshot.objects.filter(listing__unique_name='ozp.test.air_mail')
         screenshots_expected = str(sorted([(i.order,
-                            i.small_image.id,
-                            i.small_image.security_marking,
-                            i.large_image.id,
-                            i.large_image.security_marking,
-                            i.description) for i in screenshots]))
+                                            i.small_image.id,
+                                            i.small_image.security_marking,
+                                            i.large_image.id,
+                                            i.large_image.security_marking,
+                                            i.description) for i in screenshots]))
 
         out = model_access.screenshots_to_string(screenshots, True)
         # Below does not work with both postgresql and sqlite
@@ -315,7 +306,7 @@ class ListingTest(TestCase):
             "url": "http://localhost:8000/api/image/2/",
             "id": 2,
             "security_marking": "UNCLASSIFIED"
-            }
+        }
 
         out = model_access.image_to_string(image)
         self.assertEqual(out, "2.UNCLASSIFIED")
