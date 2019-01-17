@@ -1,8 +1,5 @@
-"""
-Tests that the sample data was created correctly
-"""
-from django.test import override_settings
 from django.test import TestCase
+from django.test import override_settings
 
 from ozpcenter import models
 from ozpcenter.scripts import sample_data_generator as data_gen
@@ -11,18 +8,12 @@ from ozpcenter.scripts import sample_data_generator as data_gen
 @override_settings(ES_ENABLED=False)
 class SampleDataGeneratorTest(TestCase):
 
-    def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
-        pass
-
     @classmethod
     def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
         data_gen.run()
+
+    def setUp(self):
+        pass
 
     def test_categories(self):
         categories = list(models.Category.objects.values_list('title', flat=True))

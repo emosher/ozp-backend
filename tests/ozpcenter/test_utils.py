@@ -1,34 +1,21 @@
-"""
-Utils tests
-"""
-from collections import OrderedDict
 import json
 from unittest.mock import patch
 
-from django.test import override_settings
 from django.test import TestCase
+from django.test import override_settings
 
-from tests.ozpcenter.helper import patch_environ
 from ozpcenter import utils as utils
-from ozpcenter.scripts import sample_data_generator as data_gen
+from tests.ozpcenter.helper import patch_environ
 
 
 @override_settings(ES_ENABLED=False)
 class UtilsTest(TestCase):
 
-    def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
-        pass
-        self.max_diff = 0
-
     @classmethod
     def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
-        # data_gen.run()
+        pass
+
+    def setUp(self):
         pass
 
     def test_make_keysafe_unwanted(self):
@@ -69,18 +56,18 @@ class UtilsTest(TestCase):
                     'items': [
                         {'type': 'dict',
                          'props': {
-                            'title': {
-                                'type': 'str'}
-                            }
-                        },
+                             'title': {
+                                 'type': 'str'}
+                         }
+                         },
                         {'type': 'dict',
                          'props': {
-                           'title': {'type': 'str'}
-                             }
-                        }], 'len': 2},
+                             'title': {'type': 'str'}
+                         }
+                         }], 'len': 2},
                 'title': {'type': 'str'}
-                }
             }
+        }
         result = json.loads(json.dumps(utils.shorthand_types(input_object)))
         self.assertEquals(result, expected_results)
 

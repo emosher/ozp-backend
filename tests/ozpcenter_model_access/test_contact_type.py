@@ -1,35 +1,40 @@
-"""
-Contact Type tests
-"""
-from django.test import override_settings
+import pytest
 from django.test import TestCase
+from django.test import override_settings
 
-from ozpcenter.scripts import sample_data_generator as data_gen
 import ozpcenter.api.contact_type.model_access as model_access
-from ozpcenter import errors
-import ozpcenter.model_access as generic_model_access
-from ozpcenter import models
+from ozpcenter.models import ContactType
+from tests.cases.factories import ContactTypeFactory
 
 
+@pytest.mark.model_access
 @override_settings(ES_ENABLED=False)
 class ContactTypeTest(TestCase):
 
-    def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
-        pass
-
     @classmethod
     def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
-        data_gen.run()
+        cls.contact_types = ContactTypeFactory.create_batch(5)
 
-    def test_get_non_existent_contact_type_by_name(self):
+    def setUp(self):
+        pass
+
+    def test__get_all_contact_types(self):
+        results = list(model_access.get_all_contact_types().order_by("id"))
+
+        self.assertListEqual(results, self.contact_types)
+
+    def test__get_contact_type_by_name(self):
+        expected = self.contact_types[0]
+
+        result = model_access.get_contact_type_by_name(expected.name)
+
+        self.assertEqual(result, expected)
+
+    def test__get_contact_type_by_name__not_found(self):
         contact_type = model_access.get_contact_type_by_name('Not Existent', False)
+
         self.assertIsNone(contact_type)
 
-    def test_get_non_existent_contact_type_by_name_err(self):
-        self.assertRaises(models.ContactType.DoesNotExist, model_access.get_contact_type_by_name, 'Not Existent')
+    def test__get_contact_type_by_name__not_found_raises_error(self):
+        with self.assertRaises(ContactType.DoesNotExist):
+            model_access.get_contact_type_by_name('Not Existent')

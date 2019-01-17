@@ -30,6 +30,7 @@ nested_router.register(r'review', views.ReviewViewSet, base_name='review')
 nested_router.register(r'activity', views.ListingActivityViewSet, base_name='activity')
 nested_router.register(r'rejection', views.ListingRejectionViewSet, base_name='rejection')
 nested_router.register(r'pendingdeletion', views.ListingPendingDeletionViewSet, base_name='pendingdeletion')
+nested_router.register(r'custom_field_value', views.CustomFieldValueViewSet, base_name='custom_field_value')
 # TODO: nest these
 
 router.register(r'listingtype', views.ListingTypeViewSet)

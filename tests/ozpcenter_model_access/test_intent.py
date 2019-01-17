@@ -1,40 +1,42 @@
-"""
-Intent tests
-"""
-from django.test import override_settings
+import pytest
 from django.test import TestCase
+from django.test import override_settings
 
-from ozpcenter import models
-from ozpcenter.scripts import sample_data_generator as data_gen
 import ozpcenter.api.intent.model_access as model_access
+from ozpcenter.models import Intent
+from tests.cases.factories import IntentFactory
 
 
+@pytest.mark.model_access
 @override_settings(ES_ENABLED=False)
 class IntentTest(TestCase):
 
-    def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
-        pass
-
     @classmethod
     def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
-        data_gen.run()
+        cls.intents = IntentFactory.create_batch(5)
 
-    def test_get_intent_by_non_existent_action(self):
-        intent = model_access.get_intent_by_action('Does not exist')
-        self.assertIsNone(intent)
+    def setUp(self):
+        pass
 
-    def test_get_intent_by_non_existent_id(self):
-        intent = model_access.get_intent_by_id(0)
-        self.assertIsNone(intent)
+    def test__get_all_intents(self):
+        results = list(model_access.get_all_intents().order_by("id"))
 
-    def test_get_intent_by_non_existent_action_err(self):
-        self.assertRaises(models.Intent.DoesNotExist, model_access.get_intent_by_action, 'Does not exist', True)
+        self.assertListEqual(results, self.intents)
 
-    def test_get_intent_by_non_existent_id_err(self):
-        self.assertRaises(models.Intent.DoesNotExist, model_access.get_intent_by_id, 0, True)
+    def test__get_intent_by_id__not_found(self):
+        result = model_access.get_intent_by_id(0)
+
+        self.assertIsNone(result)
+
+    def test__get_intent_by_id__not_found_raises_error(self):
+        with self.assertRaises(Intent.DoesNotExist):
+            model_access.get_intent_by_id(0, True)
+
+    def test__get_intent_by_action__not_found(self):
+        result = model_access.get_intent_by_action("Does not exist")
+
+        self.assertIsNone(result)
+
+    def test__get_intent_by_action__not_found_raises_error(self):
+        with self.assertRaises(Intent.DoesNotExist):
+            model_access.get_intent_by_action("Does not exist", True)

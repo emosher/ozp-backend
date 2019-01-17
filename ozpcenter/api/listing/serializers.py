@@ -3,19 +3,12 @@ Listing Serializers
 """
 import datetime
 import logging
-import pytz
 
+import pytz
 from django.contrib import auth
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
-from ozpcenter.pubsub import dispatcher
-from ozpcenter import constants
-from ozpcenter import errors
-from ozpcenter import models
-from plugins.plugin_manager import system_anonymize_identifiable_data
-from plugins.plugin_manager import system_has_access_control
-from plugins import plugin_manager
 import ozpcenter.api.agency.model_access as agency_model_access
 import ozpcenter.api.agency.serializers as agency_serializers
 import ozpcenter.api.category.model_access as category_model_access
@@ -29,16 +22,35 @@ import ozpcenter.api.intent.serializers as intent_serializers
 import ozpcenter.api.listing.model_access as model_access
 import ozpcenter.api.profile.serializers as profile_serializers
 import ozpcenter.model_access as generic_model_access
-
+from ozpcenter import constants
+from ozpcenter import errors
+from ozpcenter import models
+from ozpcenter.api.serializers import CustomFieldSerializer
+from ozpcenter.api.serializers import CustomFieldValueSerializer
+from ozpcenter.pubsub import dispatcher
+from plugins import plugin_manager
+from plugins.plugin_manager import system_anonymize_identifiable_data
+from plugins.plugin_manager import system_has_access_control
 
 logger = logging.getLogger('ozp-center.' + str(__name__))
 
 
 class ListingTypeSerializer(serializers.ModelSerializer):
+    custom_fields = CustomFieldSerializer(read_only=True, many=True)
 
     class Meta:
         model = models.ListingType
-        fields = ('title',)
+        fields = ('id', 'title', 'description', 'custom_fields')
+
+        extra_kwargs = {
+            'title': {'validators': []}
+        }
+
+
+class ListingTypePOSTSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.ListingType
+        fields = ('id', 'title', 'description', 'custom_fields')
 
         extra_kwargs = {
             'title': {'validators': []}
@@ -203,6 +215,7 @@ def validate_listing(serializer_instance, data):
     data['usage_requirements'] = data.get('usage_requirements')
     data['system_requirements'] = data.get('system_requirements')
     data['is_private'] = data.get('is_private', False)
+    data['is_exportable'] = data.get('is_exportable', False)
     data['security_marking'] = data.get('security_marking')
 
     # only checked on update, not create
@@ -372,11 +385,13 @@ def validate_listing(serializer_instance, data):
 
 def create_listing(serializer_instance, validated_data):
     # TODO Put in listing model_access.py
+    user = serializer_instance.context['request'].user
+    profile = generic_model_access.get_profile(user.username)
+
     title = validated_data['title']
-    user = generic_model_access.get_profile(serializer_instance.context['request'].user.username)
 
     logger.info('creating listing {0!s} for user {1!s}'.format(title,
-        user.user.username), extra={'request': serializer_instance.context.get('request')})
+        user.username), extra={'request': serializer_instance.context.get('request')})
 
     # TODO required_listings
     listing = models.Listing(title=title,
@@ -430,7 +445,7 @@ def create_listing(serializer_instance, validated_data):
                 listing.owners.add(owner)
         else:
             # if no owners are specified, just add the current user
-            listing.owners.add(user)
+            listing.owners.add(profile)
 
     if validated_data.get('categories') is not None:
         for category in validated_data['categories']:
@@ -464,19 +479,33 @@ def create_listing(serializer_instance, validated_data):
                 listing=listing)
             screenshot.save()
 
-    # create a new activity
-    model_access.create_listing(user, listing)
+    if 'custom_fields' in validated_data:
+        for field_value_dict in validated_data['custom_fields']:
+            field_id = field_value_dict['custom_field'].id
+            field = models.CustomField.objects.find_by_id(id=field_id)
+            value = field_value_dict['value']
 
-    dispatcher.publish('listing_created', listing=listing, profile=user)
+            field_value = models.CustomFieldValue(listing=listing,
+                                                  custom_field=field,
+                                                  value=value)
+            field_value.save()
+
+            listing.custom_fields.add(field_value)
+
+    # create a new activity
+    model_access.create_listing(profile, listing)
+
+    dispatcher.publish('listing_created', listing=listing, profile=profile)
     return listing
 
 
 def update_listing(serializer_instance, instance, validated_data):
     # TODO Put in listing model_access.py
-    user = generic_model_access.get_profile(serializer_instance.context['request'].user.username)
+    user = serializer_instance.context['request'].user
+    profile = generic_model_access.get_profile(user.username)
 
-    if user.highest_role() not in ['APPS_MALL_STEWARD', 'ORG_STEWARD']:
-        if user not in instance.owners.all():
+    if profile.highest_role() not in ['APPS_MALL_STEWARD', 'ORG_STEWARD']:
+        if profile not in instance.owners.all():
             raise errors.PermissionDenied(
                 'User ({0!s}) is not an owner of this listing'.format(user.username))
 
@@ -497,16 +526,16 @@ def update_listing(serializer_instance, instance, validated_data):
 
     if validated_data['is_enabled'] != instance.is_enabled:
         if validated_data['is_enabled']:
-            model_access.enable_listing(user, instance)
+            model_access.enable_listing(profile, instance)
         else:
-            model_access.disable_listing(user, instance)
+            model_access.disable_listing(profile, instance)
 
         instance.is_enabled = validated_data['is_enabled']
 
         if validated_data['approval_status'] == models.Listing.APPROVED:
             dispatcher.publish('listing_enabled_status_changed',
                                listing=instance,
-                               profile=user,
+                               profile=profile,
                                is_enabled=validated_data['is_enabled'])
 
     if validated_data['is_508_compliant'] != instance.is_508_compliant:
@@ -524,11 +553,11 @@ def update_listing(serializer_instance, instance, validated_data):
         if validated_data['approval_status'] == models.Listing.APPROVED:
             dispatcher.publish('listing_private_status_changed',
                                listing=instance,
-                               profile=user,
+                               profile=profile,
                                is_private=validated_data['is_private'])
 
     if validated_data['is_featured'] != instance.is_featured:
-        if user.highest_role() not in ['APPS_MALL_STEWARD', 'ORG_STEWARD']:
+        if profile.highest_role() not in ['APPS_MALL_STEWARD', 'ORG_STEWARD']:
             raise errors.PermissionDenied('Only stewards can change is_featured setting of a listing')
 
         change_details.append({'old_value': model_access.bool_to_string(instance.is_featured),
@@ -536,30 +565,38 @@ def update_listing(serializer_instance, instance, validated_data):
         instance.is_featured = validated_data['is_featured']
         instance.featured_date = datetime.datetime.now(pytz.utc) if validated_data['is_featured'] else None
 
+    if validated_data['is_exportable'] != instance.is_exportable:
+        if profile.highest_role() not in ['APPS_MALL_STEWARD', 'ORG_STEWARD']:
+            raise errors.PermissionDenied('Only stewards can change is_exportable setting of a listing')
+            
+        change_details.append({'old_value': model_access.bool_to_string(instance.is_exportable),
+                'new_value': model_access.bool_to_string(validated_data['is_exportable']), 'field_name': 'is_exportable'})
+        instance.is_exportable = validated_data['is_exportable']
+
     s = validated_data['approval_status']
     if s and s != instance.approval_status:  # Check to see if approval_status has changed
         old_approval_status = instance.approval_status
-        if s == models.Listing.APPROVED and user.highest_role() != 'APPS_MALL_STEWARD':
+        if s == models.Listing.APPROVED and profile.highest_role() != 'APPS_MALL_STEWARD':
             raise errors.PermissionDenied('Only an APPS_MALL_STEWARD can mark a listing as APPROVED')
-        if s == models.Listing.APPROVED_ORG and user.highest_role() not in ['APPS_MALL_STEWARD', 'ORG_STEWARD']:
+        if s == models.Listing.APPROVED_ORG and profile.highest_role() not in ['APPS_MALL_STEWARD', 'ORG_STEWARD']:
             raise errors.PermissionDenied('Only stewards can mark a listing as APPROVED_ORG')
         if s == models.Listing.PENDING:
-            model_access.submit_listing(user, instance)
+            model_access.submit_listing(profile, instance)
         if s == models.Listing.PENDING_DELETION:
             # pending deletion should be handled through ListingPendingDeletionViewSet
             # keeping this here for now for backwards compatibility
-            model_access.pending_delete_listing(user, instance, 'Unknown reason')
+            model_access.pending_delete_listing(profile, instance, 'Unknown reason')
         if s == models.Listing.APPROVED_ORG:
-            model_access.approve_listing_by_org_steward(user, instance)
+            model_access.approve_listing_by_org_steward(profile, instance)
         if s == models.Listing.APPROVED:
-            model_access.approve_listing(user, instance)
+            model_access.approve_listing(profile, instance)
         if s == models.Listing.REJECTED:
             # TODO: need to get the rejection text from somewhere
-            model_access.reject_listing(user, instance, 'TODO: rejection reason')
+            model_access.reject_listing(profile, instance, 'TODO: rejection reason')
 
         dispatcher.publish('listing_approval_status_changed',
                            listing=instance,
-                           profile=user,
+                           profile=profile,
                            old_approval_status=old_approval_status,
                            new_approval_status=instance.approval_status)
 
@@ -654,7 +691,7 @@ def update_listing(serializer_instance, instance, validated_data):
 
             dispatcher.publish('listing_categories_changed',
                                listing=instance,
-                               profile=user,
+                               profile=profile,
                                old_categories=old_category_instances,
                                new_categories=validated_data['categories'])
 
@@ -689,9 +726,38 @@ def update_listing(serializer_instance, instance, validated_data):
 
             dispatcher.publish('listing_tags_changed',
                                listing=instance,
-                               profile=user,
+                               profile=profile,
                                old_tags=old_tag_instances,
                                new_tags=new_tags_instances)
+
+    # tags will be automatically created if necessary
+    if 'custom_fields' in validated_data:
+        old_custom_field_instances = instance.custom_fields.all()
+        custom_fields = model_access.custom_field_values_to_string(old_custom_field_instances, True)
+        new_custom_fields = model_access.custom_field_values_to_string(validated_data['custom_fields'])
+        if custom_fields != new_custom_fields:
+            changeset = {'old_value': custom_fields,
+                         'new_value': new_custom_fields,
+                         'field_name': 'custom_fields'}
+            change_details.append(changeset)
+            new_custom_fields_instances = []
+            for cfv in validated_data['custom_fields']:
+                id = cfv['custom_field'].id
+                cf = models.CustomField.objects.find_by_id(id=id)
+                obj, created = models.CustomFieldValue.objects.get_or_create(
+                    listing=instance,
+                    custom_field=cf,
+                    value=cfv['value']
+                )
+                if created:
+                    instance.custom_fields.add(obj)
+                new_custom_fields_instances.append(obj)
+
+            dispatcher.publish('listing_custom_field_values_changed',
+                               listing=instance,
+                               profile=profile,
+                               old_tags=old_custom_field_instances,
+                               new_tags=new_custom_fields_instances)
 
     if 'intents' in validated_data:
         old_intent_instances = instance.intents.all()
@@ -769,7 +835,7 @@ def update_listing(serializer_instance, instance, validated_data):
 
     # If the listing was modified add an entry showing changes
     if change_details:
-        model_access.log_listing_modification(user, instance, change_details)
+        model_access.log_listing_modification(profile, instance, change_details)
 
         new_change_details = []
         field_to_exclude = ['is_private', 'categories', 'tags']
@@ -780,7 +846,7 @@ def update_listing(serializer_instance, instance, validated_data):
         if new_change_details:
             dispatcher.publish('listing_changed',
                                listing=instance,
-                               profile=user,
+                               profile=profile,
                                change_details=new_change_details)
 
     instance.edited_date = datetime.datetime.now(pytz.utc)
@@ -804,6 +870,7 @@ class ListingSerializer(serializers.ModelSerializer):
     owners = CreateListingProfileSerializer(required=False, many=True)
     categories = category_serializers.ListingCategorySerializer(many=True, required=False)
     tags = TagSerializer(many=True, required=False)
+    custom_fields = CustomFieldValueSerializer(many=True, required=False)
     contacts = contact_type_serializers.ContactSerializer(many=True, required=False)
     intents = intent_serializers.IntentSerializer(many=True, required=False)
     small_icon = image_serializers.ImageSerializer(required=False, allow_null=True)

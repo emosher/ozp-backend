@@ -5,23 +5,23 @@ TODO: Make below code work
 if not len_pipe.has_next():
     break
 """
-from django.test import override_settings
 from django.test import TestCase
+from django.test import override_settings
 
-from ozpcenter.recommend.graph_factory import GraphFactory
-from ozpcenter.recommend import recommend_utils
-from ozpcenter.pipe import pipes
 from ozpcenter.pipe import pipeline
+from ozpcenter.pipe import pipes
+from ozpcenter.recommend import recommend_utils
 from ozpcenter.recommend.graph import Graph
 
 
 @override_settings(ES_ENABLED=False)
 class PipelineTest(TestCase):
 
+    @classmethod
+    def setUpTestData(cls):
+        pass
+
     def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
         self.graph_test_1 = Graph()
         self.graph_test_1.add_vertex('test_label', {'test_field': 1})
         self.graph_test_1.add_vertex('test_label', {'test_field': 2})
@@ -30,13 +30,6 @@ class PipelineTest(TestCase):
         self.graph_test_2.add_vertex('test_label', {'test_field': 8})
         self.graph_test_2.add_vertex('test_label', {'test_field': 10})
         self.graph_test_2.add_vertex('test_label', {'test_field': 12, 'time': 'now'})
-
-    @classmethod
-    def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
-        pass
 
     def _iterate_pipeline(self, current_pipeline):
         list_out = []
@@ -133,7 +126,7 @@ class PipelineTest(TestCase):
         self.assertEqual(str(pipeline_test), '[DictKeyValueIterator(3), GraphVertexPipe(), ElementPropertiesPipe(internal:False)]')
 
     def test_pipeline_graph_vertex_chain_dict_to_list_internal(self):
-        pipeline_test = pipeline.Pipeline(self.graph_test_2 .get_vertices_iterator(),
+        pipeline_test = pipeline.Pipeline(self.graph_test_2.get_vertices_iterator(),
                                           [pipes.GraphVertexPipe(),
                                            pipes.ElementPropertiesPipe(internal=True)])
         expected_output = [

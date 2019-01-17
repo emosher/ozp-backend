@@ -10,7 +10,7 @@ from django.http import Http404
 from django.utils import six
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import exceptions, status
-from rest_framework.exceptions import APIException
+from rest_framework.exceptions import APIException, NotAuthenticated
 from rest_framework.compat import set_rollback
 from rest_framework.response import Response
 
@@ -70,7 +70,10 @@ def exception_handler(exc, context):
     to be raised.
     """
     request = context.get('request')
-    logger.exception(exc, extra={'request': request})
+    view_class = context.get('view').__class__.__name__
+
+    if not isinstance(exc, NotAuthenticated) and not view_class == "ImageViewSet":
+        logger.exception(exc, extra={'request': request})
 
     if isinstance(exc, APIException):
         headers = {}
@@ -112,5 +115,6 @@ def exception_handler(exc, context):
 
         set_rollback()
         return Response(data, status=status.HTTP_403_FORBIDDEN)
+
     # Note: Unhandled exceptions will raise a 500 error.
     return None

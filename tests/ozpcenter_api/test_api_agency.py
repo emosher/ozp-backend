@@ -1,30 +1,21 @@
-"""
-Tests for agency endpoints
-"""
 from django.test import override_settings
-from tests.ozp.cases import APITestCase
 
-from tests.ozpcenter.helper import APITestHelper
-from ozpcenter.utils import shorthand_dict
-from tests.ozpcenter.helper import ExceptionUnitTestHelper
 from ozpcenter.scripts import sample_data_generator as data_gen
+from ozpcenter.utils import shorthand_dict
+from tests.ozp.cases import APITestCase
+from tests.ozpcenter.helper import APITestHelper
+from tests.ozpcenter.helper import ExceptionUnitTestHelper
 
 
 @override_settings(ES_ENABLED=False)
 class AgencyApiTest(APITestCase):
 
-    def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
-        pass
-
     @classmethod
     def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
         data_gen.run()
+
+    def setUp(self):
+        pass
 
     def test_get_agencies_list(self):
         url = '/api/agency/'
@@ -32,15 +23,15 @@ class AgencyApiTest(APITestCase):
         shorten_data = shorthand_dict(response.data, exclude_keys=['id'])
 
         expected_results = [
-         '(short_name:Miniluv,title:Ministry of Love)',
-         '(short_name:Minipax,title:Ministry of Peace)',
-         '(short_name:Miniplen,title:Ministry of Plenty)',
-         '(short_name:Minitrue,title:Ministry of Truth)',
-         '(short_name:Test,title:Test)',
-         '(short_name:Test 1,title:Test 1)',
-         '(short_name:Test2,title:Test 2)',
-         '(short_name:Test 3,title:Test 3)',
-         '(short_name:Test 4,title:Test 4)']
+            '(short_name:Miniluv,title:Ministry of Love)',
+            '(short_name:Minipax,title:Ministry of Peace)',
+            '(short_name:Miniplen,title:Ministry of Plenty)',
+            '(short_name:Minitrue,title:Ministry of Truth)',
+            '(short_name:Test,title:Test)',
+            '(short_name:Test 1,title:Test 1)',
+            '(short_name:Test2,title:Test 2)',
+            '(short_name:Test 3,title:Test 3)',
+            '(short_name:Test 4,title:Test 4)']
 
         self.assertEqual(shorten_data, expected_results)
 

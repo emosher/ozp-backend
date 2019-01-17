@@ -7,10 +7,15 @@ from ozpcenter import views
 from rest_framework_jwt.views import obtain_jwt_token
 
 urlpatterns = [
+    url(r'', include('ozpcenter.api.affiliated_store.urls')),
     url(r'', include('ozpcenter.api.agency.urls')),
     url(r'', include('ozpcenter.api.category.urls')),
     url(r'', include('ozpcenter.api.contact_type.urls')),
+    url(r'', include('ozpcenter.api.custom_field.urls')),
+    url(r'', include('ozpcenter.api.custom_field_type.urls')),
+    url(r'', include('ozpcenter.api.export.urls')),
     url(r'', include('ozpcenter.api.image.urls')),
+    url(r'', include('ozpcenter.api.import_task.urls')),
     url(r'', include('ozpcenter.api.intent.urls')),
     url(r'', include('ozpcenter.api.library.urls')),
     url(r'', include('ozpcenter.api.listing.urls')),

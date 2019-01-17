@@ -1,42 +1,42 @@
-"""
-Agency tests
-"""
-from django.test import override_settings
+import pytest
 from django.test import TestCase
+from django.test import override_settings
 
-from ozpcenter.scripts import sample_data_generator as data_gen
 import ozpcenter.api.agency.model_access as model_access
-from ozpcenter import errors
-import ozpcenter.model_access as generic_model_access
-from ozpcenter import models
+from ozpcenter.models import Agency
+from tests.cases.factories import AgencyFactory
 
 
+@pytest.mark.model_access
 @override_settings(ES_ENABLED=False)
 class AgencyTest(TestCase):
 
-    def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
-        pass
-
     @classmethod
     def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
-        data_gen.run()
+        cls.agencies = AgencyFactory.create_default_agencies()
 
-    def test_get_non_existent_agency_by_title(self):
-        agency = model_access.get_agency_by_title('Non Existent')
-        self.assertIsNone(agency)
+    def setUp(self):
+        pass
 
-    def test_get_non_existent_agency_by_title_err(self):
-        self.assertRaises(models.Agency.DoesNotExist, model_access.get_agency_by_title, 'Not Existent', True)
+    def test__get_all_agencies(self):
+        results = list(model_access.get_all_agencies().order_by("id"))
 
-    def test_get_non_existent_agency_by_id(self):
-        agency = model_access.get_agency_by_id(0)
-        self.assertIsNone(agency)
+        self.assertListEqual(results, self.agencies)
 
-    def test_get_non_existent_agency_by_id_err(self):
-        self.assertRaises(models.Agency.DoesNotExist, model_access.get_agency_by_id, 0, True)
+    def test__get_agency_by_id__not_found(self):
+        result = model_access.get_agency_by_id(0)
+
+        self.assertIsNone(result)
+
+    def test__get_agency_by_id__not_found_raises_error(self):
+        with self.assertRaises(Agency.DoesNotExist):
+            model_access.get_agency_by_id(0, True)
+
+    def test__get_agency_by_title__not_found(self):
+        result = model_access.get_agency_by_title("Non Existent")
+
+        self.assertIsNone(result)
+
+    def test__get_agency_by_title__not_found_raises_error(self):
+        with self.assertRaises(Agency.DoesNotExist):
+            model_access.get_agency_by_title("Not Existent", True)

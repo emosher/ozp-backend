@@ -2,7 +2,7 @@
 # create clean python env
 rm -rf ~/python_envs/ci-env/
 mkdir ~/python_envs/ci-env/
-pyvenv-3.4 ~/python_envs/ci-env/
+pyvenv-3.6 ~/python_envs/ci-env/
 source ~/python_envs/ci-env/bin/activate
 # install prereqs (clean)
 pip install --upgrade pip

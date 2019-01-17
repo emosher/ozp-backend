@@ -1,33 +1,28 @@
-"""
-Image tests
-"""
-from django.test import override_settings
+import pytest
 from django.test import TestCase
+from django.test import override_settings
 
-from ozpcenter.scripts import sample_data_generator as data_gen
 import ozpcenter.api.image.model_access as model_access
+from tests.cases.factories import ImageFactory
 
 
+@pytest.mark.model_access
 @override_settings(ES_ENABLED=False)
 class ImageTest(TestCase):
 
-    def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
-        pass
-
     @classmethod
     def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
-        data_gen.run()
+        cls.images = ImageFactory.create_batch(5)
 
-    def test_get_all_images_by_username(self):
-        images = model_access.get_all_images()
-        self.assertIsNotNone(images)
+    def setUp(self):
+        pass
 
-    def test_get_image_by_id_err(self):
-        image = model_access.get_image_by_id(0)
-        self.assertIsNone(image)
+    def test__get_all_images(self):
+        results = list(model_access.get_all_images().order_by("id"))
+
+        self.assertListEqual(results, self.images)
+
+    def test__get_image_by_id__not_found(self):
+        result = model_access.get_image_by_id(0)
+
+        self.assertIsNone(result)

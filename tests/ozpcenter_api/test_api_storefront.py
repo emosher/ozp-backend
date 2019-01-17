@@ -1,30 +1,19 @@
-"""
-Tests for storefront endpoints
-TODO: should we test keys of each item in the list of listings for storefront
-"""
-
 from django.test import override_settings
-from tests.ozp.cases import APITestCase
 
 from ozpcenter import model_access as generic_model_access
 from ozpcenter.scripts import sample_data_generator as data_gen
+from tests.ozp.cases import APITestCase
 
 
 @override_settings(ES_ENABLED=False)
 class StorefrontApiTest(APITestCase):
 
-    def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
-        self
-
     @classmethod
     def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
         data_gen.run()
+
+    def setUp(self):
+        pass
 
     def test_metadata_authorized(self):
         url = '/api/metadata/'
@@ -132,10 +121,10 @@ class StorefrontApiTest(APITestCase):
     def _check_listing_properties(self, listings, additional_keys=None):
         additional_keys = [] if additional_keys is None else additional_keys
         desired_keys = ['id', 'title', 'agency', 'avg_rate',
-            'total_reviews', 'feedback_score', 'is_private', 'is_bookmarked',
-            'feedback', 'description_short', 'security_marking',
-            'usage_requirements', 'system_requirements', 'launch_url',
-            'large_banner_icon', 'banner_icon', 'unique_name', 'is_enabled']
+                        'total_reviews', 'feedback_score', 'is_private', 'is_bookmarked',
+                        'feedback', 'description_short', 'security_marking',
+                        'usage_requirements', 'system_requirements', 'launch_url',
+                        'large_banner_icon', 'banner_icon', 'unique_name', 'is_enabled']
         desired_keys += additional_keys
         desired_keys = sorted(desired_keys)
 

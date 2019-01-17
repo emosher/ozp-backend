@@ -1,0 +1,594 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+
+  "type": "object",
+  "properties": {
+    "definitions": {
+      "type": "object"
+    },
+    "agencies": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Agency"
+      }
+    },
+    "categories": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Category"
+      }
+    },
+    "contact_types": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ContactType"
+      }
+    },
+    "contacts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Contact"
+      }
+    },
+    "custom_fields": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/CustomField"
+      }
+    },
+    "custom_field_types": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/CustomFieldType"
+      }
+    },
+    "image_types": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ImageType"
+      }
+    },
+    "intents": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Intent"
+      }
+    },
+    "listings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Listing"
+      }
+    },
+    "listing_types": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ListingType"
+      }
+    },
+    "profiles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Profile"
+      }
+    },
+    "tags": {
+      "type": "array",
+        "items": {
+        "$ref": "#/definitions/Tag"
+      }
+    }
+  },
+  "additionalProperties": false,
+
+  "definitions": {
+
+    "AccessControl": {
+      "type": "object",
+      "properties": {
+        "clearances": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "formal_accesses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "visas": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["clearances", "formal_accesses", "visas"],
+      "additionalProperties": false
+    },
+
+    "Agency": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "short_name": {
+          "type": "string"
+        },
+        "icon": {
+          "$ref": "#/definitions/Image"
+        }
+      },
+      "required": ["title", "short_name", "icon"],
+      "additionalProperties": false
+    },
+
+    "Category": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "required": ["title", "description"],
+      "additionalProperties": false
+    },
+
+    "ContactType": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        }
+      },
+      "required": ["name", "required"],
+      "additionalProperties": false
+    },
+
+    "Contact": {
+      "type": "object",
+      "properties": {
+        "contact_type_name": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "organization": {
+          "type": ["string", "null"]
+        },
+        "secure_phone": {
+          "type": ["string", "null"]
+        },
+        "unsecure_phone": {
+          "type": ["string", "null"]
+        }
+      },
+      "required": ["contact_type_name", "name", "email"],
+      "additionalProperties": false
+    },
+
+    "CustomField": {
+      "type": "object",
+      "properties": {
+        "type_name": {
+          "type": "string"
+        },
+        "section": {
+          "type": "string"
+        },
+        "display_name": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "is_required": {
+          "type": "boolean"
+        },
+        "admin_only": {
+          "type": "boolean"
+        },
+        "properties": {
+          "type": ["string", "null"]
+        },
+        "all_listing_types": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type_name",
+        "section",
+        "display_name",
+        "label",
+        "description",
+        "tooltip",
+        "is_required",
+        "admin_only",
+        "all_listing_types"
+      ],
+      "additionalProperties": false
+    },
+
+    "CustomFieldType": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "display_name": {
+          "type": "string"
+        },
+        "media_type": {
+          "type": "string"
+        },
+        "options": {
+          "type": ["string", "null"]
+        }
+      },
+      "required": ["name", "display_name", "media_type"],
+      "additionalProperties": false
+    },
+
+    "CustomFieldValue": {
+      "type": "object",
+      "properties": {
+        "custom_field_label": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": ["custom_field_label", "value"],
+      "additionalProperties": false
+    },
+
+    "DocUrl": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "required": ["name", "url"],
+      "additionalProperties": false
+    },
+
+    "Image": {
+      "type": "object",
+      "properties": {
+        "filename": {
+          "type": "string"
+        },
+        "security_marking": {
+          "type": "string",
+          "default": "UNCLASSIFIED"
+        },
+        "image_type_name": {
+          "type": "string"
+        }
+      },
+      "required": ["filename"],
+      "additionalProperties": false
+    },
+
+    "ImageType": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "min_width": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 16
+        },
+        "max_width": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 2048
+        },
+        "min_height": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 16
+        },
+        "max_height": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 2048
+        },
+        "max_size_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 2097152
+        }
+      },
+      "required": ["name"],
+      "additionalProperties": false
+    },
+
+    "Intent": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string"
+        },
+        "media_type": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "icon": {
+          "$ref": "#/definitions/Image"
+        }
+      },
+      "required": ["action", "media_type", "label", "icon"],
+      "additionalProperties": false
+    },
+
+    "Listing": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "description_short": {
+          "type": "string"
+        },
+        "launch_url": {
+          "type": "string"
+        },
+        "version_name": {
+          "type": "string"
+        },
+        "unique_name": {
+          "type": "string"
+        },
+        "what_is_new": {
+          "type": "string"
+        },
+        "usage_requirements": {
+          "type": "string"
+        },
+        "system_requirements": {
+          "type": "string"
+        },
+        "security_marking": {
+          "type": "string"
+        },
+        "is_enabled": {
+          "type": "boolean"
+        },
+        "is_private": {
+          "type": "boolean"
+        },
+        "is_featured": {
+          "type": "boolean"
+        },
+        "is_exportable": {
+          "type": "boolean"
+        },
+        "iframe_compatible": {
+          "type": "boolean"
+        },
+        "agency_title": {
+          "type": "string"
+        },
+        "listing_type_title": {
+          "type": "string"
+        },
+        "small_icon": {
+          "$ref": "#/definitions/Image"
+        },
+        "large_icon": {
+          "$ref": "#/definitions/Image"
+        },
+        "banner_icon": {
+          "$ref": "#/definitions/Image"
+        },
+        "large_banner_icon": {
+          "$ref": "#/definitions/Image"
+        },
+        "category_titles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "contact_emails": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "intent_actions": {
+          "type": ["array", "null"],
+          "items": {
+            "type": "string"
+          }
+        },
+        "owner_usernames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tag_names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "activities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ListingActivity"
+          }
+        },
+        "doc_urls": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DocUrl"
+          }
+        },
+        "screenshots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Screenshot"
+          }
+        },
+        "custom_field_values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CustomFieldValue"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "ListingActivity": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": ["CREATED", "SUBMITTED", "APPROVED_ORG", "APPROVED"]
+        },
+        "author_username": {
+          "type": "string"
+        }
+      },
+      "required": ["action", "author_username"],
+      "additionalProperties": false
+    },
+
+    "ListingType": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "required": ["title", "description"],
+      "additionalProperties": false
+    },
+
+    "Profile": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "display_name": {
+          "type": "string"
+        },
+        "bio": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "dn": {
+          "type": "string"
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "organizations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "stewarded_organizations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "access_control": {
+          "$ref": "#/definitions/AccessControl"
+        }
+      },
+      "required": [
+        "username",
+        "display_name",
+        "bio",
+        "email",
+        "dn",
+        "groups",
+        "organizations",
+        "stewarded_organizations",
+        "access_control"
+      ],
+      "additionalProperties": false
+    },
+
+    "Screenshot": {
+      "type": "object",
+      "properties": {
+        "order": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "description": {
+          "type": "string"
+        },
+        "small_image": {
+          "$ref": "#/definitions/Image"
+        },
+        "large_image": {
+          "$ref": "#/definitions/Image"
+        }
+      },
+      "required": ["order", "description", "small_image", "large_image"],
+      "additionalProperties": false
+    },
+
+    "Tag": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": ["name"],
+      "additionalProperties": false
+    }
+
+  }
+
+}

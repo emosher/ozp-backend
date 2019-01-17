@@ -1,8 +1,5 @@
-"""
-Make sure that Pipe and Pipeline classes work
-"""
-from django.test import override_settings
 from django.test import TestCase
+from django.test import override_settings
 
 from ozpcenter.recommend.graph import Graph
 from ozpcenter.recommend.graph_factory import GraphFactory
@@ -12,10 +9,11 @@ from ozpcenter.scripts import sample_data_generator as data_gen
 @override_settings(ES_ENABLED=False)
 class GraphQueryTest(TestCase):
 
+    @classmethod
+    def setUpTestData(cls):
+        data_gen.run()
+
     def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
         self.graph = Graph()
         self.graph.add_vertex('test_label', {'test_field': 1})
         self.graph.add_vertex('test_label', {'test_field': 2})
@@ -27,13 +25,6 @@ class GraphQueryTest(TestCase):
         self.vertex3 = self.graph2.add_vertex('listing', {'title': 'Skyzone2'}, current_id=30)
         self.vertex1.add_edge('personListing', self.vertex2)
         self.vertex1.add_edge('personListing', self.vertex3)
-
-    @classmethod
-    def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
-        data_gen.run()
 
     def test_graph_query_builder(self):
         query = self.graph.query().V()
@@ -120,12 +111,12 @@ class GraphQueryTest(TestCase):
 
         profile_listing_categories_ids = []
         query_results = (graph.query()
-                              .v('p-1')
-                              .out('bookmarked')
-                              .side_effect(lambda current_vertex:
-                                           [profile_listing_categories_ids.append(current) for current in
-                                            current_vertex.query().out('listingCategory').id().to_list()])
-                              .id().to_list())  # Get listings of target profile ids
+                         .v('p-1')
+                         .out('bookmarked')
+                         .side_effect(lambda current_vertex:
+                                      [profile_listing_categories_ids.append(current) for current in
+                                       current_vertex.query().out('listingCategory').id().to_list()])
+                         .id().to_list())  # Get listings of target profile ids
 
         expected_categories = ['c-1', 'c-2', 'c-1']
         expected_listing = ['l-1', 'l-2', 'l-3']

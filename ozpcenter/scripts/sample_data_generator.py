@@ -360,6 +360,24 @@ def load_data_from_sql(db_connection, filename):
             cursor.execute(sql_statement)
 
 
+def load_custom_field_types(db_connection):
+    field_types = load_yaml_file('custom_field_types.yaml')['custom_field_types']
+
+    print('--Creating Custom Field Types')
+    section_start_time = time_ms()
+
+    with transaction.atomic():
+        for field_type in field_types:
+            instance = models.CustomFieldType(name=field_type['name'],
+                                              display_name=field_type['display_name'],
+                                              media_type=field_type['media_type'],
+                                              options=field_type['options'])
+            instance.save()
+
+    print('-----Took: {} ms'.format(time_ms() - section_start_time))
+    print('---Database Calls: {}'.format(show_db_calls(db_connection, False)))
+
+
 def run():
     """
     Creates basic sample data
@@ -521,6 +539,8 @@ def run():
 
     print('-----Took: {} ms'.format(time_ms() - section_start_time))
     print('---Database Calls: {}'.format(show_db_calls(db_connection, False)))
+
+    load_custom_field_types(db_connection)
 
     ############################################################################
     #                           Image Types

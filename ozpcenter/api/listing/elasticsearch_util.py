@@ -272,6 +272,12 @@ def get_mapping_setting_obj(number_of_shards=None, number_of_replicas=None):
             "is_508_compliant": {
               "type": "boolean"
             },
+            "is_external": {
+              "type": "boolean"
+            },
+            "is_exportable": {
+              "type": "boolean"
+            },
             # listing_type_title is used for filtering , ex: ['Web Application', 'Web Services', 'Widget'..]
             "listing_type_title": {
               "type": "string",
@@ -369,6 +375,27 @@ def get_mapping_setting_obj(number_of_shards=None, number_of_replicas=None):
             },
             "avg_rate": {
               "type": "double"
+            },
+            "import_metadata": {
+              "enabled": "false"
+            },
+            # custom fields used for searching
+            # custom_fields[].value used for searching
+            "custom_fields": {
+              "type": "nested",
+              "properties": {
+                "id": {
+                  "type": "long"
+                },
+                "value": {
+                  "type": "string",
+                  "analyzer": "autocomplete",
+                  "search_analyzer": "autocomplete"
+                },
+                "custom_field": {
+                    "type": "long"
+                }
+              }
             }
           }
         }
@@ -504,6 +531,7 @@ def make_search_query_obj(search_param_parser, exclude_agencies=None):
     categories = search_param_parser.categories
     agencies = search_param_parser.agencies
     listing_types = search_param_parser.listing_types
+    exportable = search_param_parser.exportable
     # Ordering
     ordering = search_param_parser.ordering
 
@@ -614,6 +642,28 @@ def make_search_query_obj(search_param_parser, exclude_agencies=None):
             }
         }
         filter_data.append(listing_type_data)
+
+    # Exportable Listings to filter
+    if exportable:
+        exportable_temp = []
+
+        for is_exportable in exportable:
+            current_exportable_data = {
+                "match": {
+                    "is_exportable": is_exportable
+                }
+            }
+        exportable_temp.append(current_exportable_data);
+
+        exportable_data = {
+            "query": {
+                "bool": {
+                    "should": exportable_temp
+                }
+            }
+        }
+
+        filter_data.append(exportable_data)
 
     # Tags to filter
     if tags:
@@ -781,6 +831,7 @@ def prepare_clean_listing_record(listing_serializer_record):
       "total_reviews": 1,
       "security_marking": "UNCLASSIFIED",
       "is_private": false,
+      "is_exportable": false,
       "agency": {
         "id": 1,
         "title": "Ministry of Truth",
@@ -827,7 +878,9 @@ def prepare_clean_listing_record(listing_serializer_record):
                       'feedback_score',
                       'usage_requirements',
                       'system_requirements',
-                      'intents']
+                      'intents',
+                      'custom_fields'
+                      ]
 
     # Clean Record
     for key in keys_to_remove:

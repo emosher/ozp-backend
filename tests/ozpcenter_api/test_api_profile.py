@@ -1,17 +1,13 @@
-"""
-Tests for Profile endpoints
-"""
 from unittest.mock import patch
 
-from django.test import override_settings
 from django.conf import settings
+from django.test import override_settings
 from rest_framework import status
-from tests.ozp.cases import APITestCase
 
-from ozpcenter import errors
-from tests.ozp import helper
 from ozpcenter import model_access as generic_model_access
 from ozpcenter.scripts import sample_data_generator as data_gen
+from tests.ozp import helper
+from tests.ozp.cases import APITestCase
 from tests.ozpcenter.helper import APITestHelper
 from tests.ozpcenter.helper import ExceptionUnitTestHelper
 
@@ -37,10 +33,11 @@ class ProfileApiTest(APITestCase):
       bigbrother2 (minitrue) - Big Brother2 - 5
     """
 
+    @classmethod
+    def setUpTestData(cls):
+        data_gen.run()
+
     def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
         # Store the orginal value of USE_AUTH_SERVER
         self.USE_AUTH_SERVER_ORGINAL = settings.OZP['USE_AUTH_SERVER']
 
@@ -50,13 +47,6 @@ class ProfileApiTest(APITestCase):
         """
         # Set the value of USE_AUTH_SERVER to the orginal value
         settings.OZP['USE_AUTH_SERVER'] = self.USE_AUTH_SERVER_ORGINAL
-
-    @classmethod
-    def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
-        data_gen.run()
 
     def _get_profile_url_for_username(self, username, postfix=None):
         """

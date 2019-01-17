@@ -1,0 +1,168 @@
+definitions:
+  groups:
+  - &GROUP-AML_STEWARD "APPS_MALL_STEWARD"
+  - &GROUP-API_EXPORT "API_EXPORT"
+
+image_types:
+- name: "agency_icon"
+- name: "intent_icon"
+- name: "small_icon"
+- name: "large_icon"
+- name: "banner_icon"
+- name: "large_banner_icon"
+- name: "small_screenshot"
+- name: "large_screenshot"
+
+agencies:
+- title: &AGENCY-STARFLEET "Starfleet Command"
+  short_name: "Starfleet"
+  icon:
+    filename: "ministry_of_truth.jpg"
+
+categories:
+- title: &CATEGORY-UTILITY "Utility"
+  description: "Utilities and stuff"
+
+contact_types:
+- name: &CONTACT_TYPE-SUPPORT "Support"
+  required: true
+- name: "Feedback"
+  required: false
+
+contacts:
+- contact_type_name: *CONTACT_TYPE-SUPPORT
+  name: "Support Person 1"
+  email: &CONTACT-SUPPORT "support1@starfleet.mil"
+  organization: "Starfleet IT"
+  secure_phone: "123-456-7890"
+  unsecure_phone: null
+
+custom_field_types:
+- name: &CUSTOM_FIELD_TYPE-TEXT "text"
+  display_name: "Text"
+  media_type: "text/plain"
+  options: null
+
+custom_fields:
+- type_name: *CUSTOM_FIELD_TYPE-TEXT
+  section: "details"
+  display_name: "Version"
+  label: &CUSTOM_FIELD-VERSION "Version"
+  description: "Widget Version"
+  tooltip: "Version number of the Widget"
+  is_required: true
+  admin_only: false
+  properties: null
+  all_listing_types: false
+
+listing_types:
+- title: &LISTING_TYPE-WIDGET "Widget"
+  description: "An Ozone Widget"
+
+tags:
+- name: &TAG-COOL "cool"
+- name: &TAG-FAVORITE "favorite"
+
+intents:
+- action: &INTENT-OPEN "/application/json/open"
+  media_type: "vnd.ozp-intent-v1+json.json"
+  label: "open"
+  icon:
+    filename: "android.png"
+- action: &INTENT-CLOSE "/application/json/close"
+  media_type: "vnd.ozp-intent-v1+json.json"
+  label: "close"
+  icon:
+    filename: "android.png"
+
+profiles:
+- username: &PROFILE-JPICARD "jpicard"
+  display_name: "Jean-Luc Picard"
+  bio: "Captain of the USS Enterprise"
+  email: "jpicard@starfleet.mil"
+  dn: "Jean-Luc Picard jlpicard"
+  groups:
+  - *GROUP-AML_STEWARD
+  organizations:
+  - *AGENCY-STARFLEET
+  stewarded_organizations:
+  access_control:
+    clearances: ["UNCLASSIFIED", "CONFIDENTIAL", "SECRET", "TOP SECRET"]
+    formal_accesses: ["SIERRA", "TANGO", "GOLF", "HOTEL"]
+    visas: ["NOVEMBER"]
+- username: "export"
+  display_name: "Export Service Account"
+  bio: "Export Service Account"
+  email: "export@starfleet.mil"
+  dn: "Export export"
+  groups:
+  - *GROUP-API_EXPORT
+  organizations:
+  stewarded_organizations:
+  access_control:
+    clearances: []
+    formal_accesses: []
+    visas: []
+
+listings:
+- title: "Imported Listing 1"
+  description: "Example Affiliated Store Listing #1"
+  description_short: "Import 1"
+  launch_url: "http://starfleet.mil/widgets/1"
+  version_name: "1.0.0"
+  unique_name: "mil.starfleet.widgets.widget1"
+  what_is_new: "Nothing much"
+  usage_requirements: "n/a"
+  system_requirements: "n/a"
+  security_marking: "UNCLASSIFIED"
+  is_enabled: true
+  is_private: false
+  is_featured: false
+  iframe_compatible: true
+  is_exportable: true
+  agency_title: *AGENCY-STARFLEET
+  listing_type_title: *LISTING_TYPE-WIDGET
+  small_icon:
+    filename: "Jasoom_small_icon.jpeg"
+  large_icon:
+    filename: "Jasoom_large_icon.jpeg"
+  banner_icon:
+    filename: "Jasoom_banner_icon.jpeg"
+  large_banner_icon:
+    filename: "Jasoom_large_banner_icon.jpeg"
+  category_titles:
+  - *CATEGORY-UTILITY
+  contact_emails:
+  - *CONTACT-SUPPORT
+  owner_usernames:
+  - *PROFILE-JPICARD
+  tag_names:
+  - *TAG-COOL
+  - *TAG-FAVORITE
+  intent_actions:
+  - *INTENT-OPEN
+  - *INTENT-CLOSE
+  activities:
+  - action: "CREATED"
+    author_username: *PROFILE-JPICARD
+  - action: "SUBMITTED"
+    author_username: *PROFILE-JPICARD
+  - action: "APPROVED_ORG"
+    author_username: *PROFILE-JPICARD
+  - action: "APPROVED"
+    author_username: *PROFILE-JPICARD
+  doc_urls:
+  - name: "guide"
+    url: "http://starfleet.mil/widgets/1/guide"
+  - name: "wiki"
+    url: "http://starfleet.mil/widgets/1/wiki"
+  screenshots:
+  - order: 0
+    description: "Preview"
+    small_image:
+      filename: "Jasoom_0_small_screenshot.jpeg"
+    large_image:
+      filename: "Jasoom_0_large_screenshot.jpeg"
+  custom_field_values:
+  - custom_field_label: *CUSTOM_FIELD-VERSION
+    value: "1.0.0"

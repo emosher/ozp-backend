@@ -61,13 +61,14 @@ INSTALLED_APPS = (
     'ozpcenter',
     'ozpiwc',
     'corsheaders',
+    'django_celery_beat'
 )
 
 # Note that CorsMiddleware needs to come before Django's CommonMiddleware if
 # you are using Django's USE_ETAGS = True setting, otherwise the CORS headers
 # will be lost from the 304 not-modified responses, causing errors in some
 # browsers.
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',

@@ -2,7 +2,7 @@
 # create clean python env
 rm -rf ~/python_envs/ci-env/
 mkdir ~/python_envs/ci-env/
-pyvenv-3.4 ~/python_envs/ci-env/
+pyvenv-3.6 ~/python_envs/ci-env/
 source ~/python_envs/ci-env/bin/activate
 # install prereqs (clean)
 pip install --upgrade pip
@@ -21,4 +21,4 @@ python manage.py collectstatic --noinput
 pycodestyle ozp ozpcenter ozpiwc plugins tests --ignore=E501,E123,E128,E121,E124,E711,E402,E722 --show-source
 
 echo "Number of cores `nproc`"
-TEST_MODE=True pytest -n `nproc` --dist=loadscope
+TEST_MODE=True pytest --junit-xml=junit-resutls.xml -n `nproc` --dist=loadscope

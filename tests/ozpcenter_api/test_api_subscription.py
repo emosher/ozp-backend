@@ -1,30 +1,19 @@
-"""
-Tests for notification endpoints
-"""
 from django.test import override_settings
-from rest_framework import status
-from tests.ozp.cases import APITestCase
 
-from tests.ozpcenter.helper import APITestHelper
 from ozpcenter.scripts import sample_data_generator as data_gen
-from ozpcenter import model_access as generic_model_access
+from tests.ozp.cases import APITestCase
+from tests.ozpcenter.helper import APITestHelper
 
 
 @override_settings(ES_ENABLED=False)
 class SubscriptionApiTest(APITestCase):
 
-    def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
-        self.entity_types = ['tag', 'category']
-
     @classmethod
     def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
         data_gen.run()
+
+    def setUp(self):
+        self.entity_types = ['tag', 'category']
 
     def test_get_all_subscriptions(self):
         url = '/api/subscription/'

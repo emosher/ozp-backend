@@ -1,0 +1,80 @@
+import json
+
+import pytest
+from django.db import connection
+from django.test import override_settings
+from django.test.utils import CaptureQueriesContext
+from rest_framework import status
+
+from ozpcenter.model_access import get_profile
+from ozpcenter.models import Listing
+from ozpcenter.scripts import sample_data_generator as data_gen
+from tests.cases import APITestCase, ModelAssertionsMixin
+from tests.cases.factories import CustomFieldValueFactory, CustomFieldTypeFactory, CustomFieldFactory, IntentFactory
+
+
+@override_settings(ES_ENABLED=False)
+class ExportApiSampleDataTest(ModelAssertionsMixin,
+                              APITestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        data_gen.run()
+
+        # Add CustomFieldValues
+        listing_1 = Listing.objects.get(id=2)
+        listing_2 = Listing.objects.get(id=3)
+
+        listing_1.required_listings = listing_2
+        listing_1.save()
+
+        cf_type_1 = CustomFieldTypeFactory(media_type="text/plain",
+                                           options="{}")
+        cf_type_2 = CustomFieldTypeFactory(media_type="application/json",
+                                           options="{}")
+
+        cf_1 = CustomFieldFactory(section="overview",
+                                  description="Description 1",
+                                  tooltip="Tooltip 1",
+                                  is_required=True,
+                                  admin_only=False,
+                                  properties='{"max_size": 10}',
+                                  all_listing_types=True,
+                                  type=cf_type_1)
+
+        cf_2 = CustomFieldFactory(section="details",
+                                  description="Description 2",
+                                  tooltip="Tooltip 2",
+                                  is_required=False,
+                                  admin_only=False,
+                                  properties='{"max_size": 100}',
+                                  all_listing_types=False,
+                                  type=cf_type_2)
+
+        cfv_1 = CustomFieldValueFactory(value="foo", custom_field=cf_1, listing=listing_1)
+        cfv_2 = CustomFieldValueFactory(value="bar", custom_field=cf_1, listing=listing_1)
+        cfv_3 = CustomFieldValueFactory(value='{"text": "foo"}', custom_field=cf_2, listing=listing_1)
+        cfv_4 = CustomFieldValueFactory(value='{"text": "bar"}', custom_field=cf_2, listing=listing_1)
+
+        intent_1 = IntentFactory()
+        intent_2 = IntentFactory()
+
+        listing_1.intents.add(intent_1, intent_2)
+
+        cls.export_profile = get_profile("bigbrother")
+
+    def setUp(self):
+        pass
+
+    # @pytest.skip
+    def test__export(self):
+        self.authenticate_as(self.export_profile)
+
+        with CaptureQueriesContext(connection) as context:
+            response = self.client.get('/api/export/', format='json')
+
+        print(json.dumps(response.data))
+        # print(context.captured_queries)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(False)

@@ -117,6 +117,55 @@ def get_listing_type_by_title(title, reraise=True):
             return None
 
 
+def get_listing_type_by_id(id, reraise=False):
+    """
+    Get listing type by id
+
+    Args:
+        id(int)
+        reraise(bool)
+
+    Returns:
+        ListingType
+    """
+    try:
+        return models.ListingType.objects.get(id=id)
+    except ObjectDoesNotExist as err:
+        if reraise:
+            raise err
+        else:
+            return None
+
+def get_associated_listings_by_listing_type(listing_type, reraise=False):
+    """
+    Get associated listings of listing_type
+
+    Args:
+        listing_type
+
+    Returns:
+        List of Listings
+    """
+    try:
+        return models.Listing.objects.filter(listing_type=listing_type)
+    except ObjectDoesNotExist as err:
+        if reraise:
+            raise err
+        else:
+            return None
+
+def delete_listing_type(listing_type):
+    #!TODO - Create transaction of the deletion
+    """
+    Delete listing_type (will delete associated listings if they exist)
+
+    Args:
+        listing_type
+    """
+    listing_type.delete()
+
+
+
 def get_listing_by_id(username, id, reraise=False):
     """
     Get listing type by title
@@ -183,6 +232,8 @@ def filter_listings(username, filter_params):
         objects = objects.filter(agency__short_name__in=filter_params['agencies'])
     if 'listing_types' in filter_params:
         objects = objects.filter(listing_type__title__in=filter_params['listing_types'])
+    if 'exportable' in filter_params:
+        objects = objects.filter(exportable__in=filter_params['exportable'])
 
     objects = objects.order_by('is_deleted', '-avg_rate', '-total_reviews')
     return objects
@@ -611,6 +662,42 @@ def disable_listing(steward, listing):
     """
     listing = _add_listing_activity(steward, listing, models.ListingActivity.DISABLED)
     listing.is_enabled = False
+    listing.edited_date = utils.get_now_utc()
+    listing.save()
+    return listing
+
+# Not being used
+def enable_exportable(user, listing):
+    """
+    Allow user's outside marketplace to view listing
+
+    Args:
+        user
+        listing
+
+    Returns:
+        listing
+    """
+    listing = _add_listing_activity(user, listing, models.ListingActivity.ENABLED_OUTSIDE_VISIBILITY)
+    listing.is_exportable = True
+    listing.edited_date = utils.get_now_utc()
+    listing.save()
+    return listing
+
+# Not being used 
+def disable_exportable(user, listing, change_details):
+    """
+    Disable user's outside marketplace to view listing
+
+    Args:
+        user
+        listing
+
+    Returns:
+        listing
+    """
+    listing = _add_listing_activity(user, listing, models.ListingActivity.DISABLED_OUTSIDE_VISIBILITY)
+    listing.is_exportable = False
     listing.edited_date = utils.get_now_utc()
     listing.save()
     return listing
@@ -1079,6 +1166,21 @@ def tags_to_string(tags, queryset=False):
     return str(sorted(new_tags))
 
 
+def custom_field_values_to_string(custom_field_values, queryset=False):
+    """
+    Args:
+        tags: [{"name": "Demo"}, ...] OR
+                    [models.Tag] (if queryset=True)
+    Returns:
+        ['<tag.name', ...]
+    """
+    if queryset:
+        new_custom_field_values = [i.value for i in custom_field_values]
+    else:
+        new_custom_field_values = [i['value'] for i in custom_field_values]
+    return str(sorted(new_custom_field_values))
+
+
 def owners_to_string(owners, queryset=False):
     """
     Args:
@@ -1105,3 +1207,32 @@ def bool_to_string(bool_instance):
         true or false (str)
     """
     return str(bool_instance).lower()
+
+
+def get_all_custom_field_values():
+    return models.CustomFieldValue.objects.all()
+
+
+def get_custom_field_value_by_id(id, reraise=False):
+    try:
+        return models.CustomFieldValue.objects.get(id=id)
+    except models.CustomFieldValue.DoesNotExist as err:
+        if reraise:
+            raise err
+        return None
+
+
+def is_listing_owner_or_admin(username, instance):
+    profile = generic_model_access.get_profile(username)
+
+    if profile.highest_role() not in ['APPS_MALL_STEWARD', 'ORG_STEWARD']:
+        if profile not in instance.owners.all():
+            raise errors.PermissionDenied(
+                'User ({0!s}) is not an owner of this listing'.format(username))
+
+    if instance.is_deleted:
+        raise errors.PermissionDenied('Cannot update a previously deleted listing')
+
+    return True
+
+

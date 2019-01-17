@@ -1,27 +1,18 @@
-"""
-Tests for agency endpoints
-"""
 from rest_framework import status
-from tests.ozp.cases import APITestCase
 
 import ozpcenter.model_access as generic_model_access
 from ozpcenter.scripts import sample_data_generator as data_gen
+from tests.ozp.cases import APITestCase
 
 
 class SystemApiTest(APITestCase):
 
-    def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
-        self
-
     @classmethod
     def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
         data_gen.run()
+
+    def setUp(self):
+        pass
 
     def test_get_listings(self):
         user = generic_model_access.get_profile('wsmith').user

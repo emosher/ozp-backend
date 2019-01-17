@@ -1,0 +1,7 @@
+name: Import Task 1
+update_type: Entire
+exec_interval: 1
+last_run_result:
+    runDate: 2015-06-06T 00:00:00Z
+    result: Pass
+    message: Import successful.

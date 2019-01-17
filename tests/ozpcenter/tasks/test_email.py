@@ -1,31 +1,20 @@
-"""
-Tests Email Task
-"""
 from django.test import override_settings
-from tests.ozp.cases import APITestCase
 
-from tests.ozpcenter.helper import APITestHelper
-from ozpcenter.utils import shorthand_dict
-from tests.ozpcenter.helper import ExceptionUnitTestHelper
 from ozpcenter.scripts import sample_data_generator as data_gen
 from ozpcenter.tasks import create_email
+from ozpcenter.utils import shorthand_dict
+from tests.ozp.cases import APITestCase
 
 
 @override_settings(ES_ENABLED=False)
 class EmailTest(APITestCase):
 
-    def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
-        pass
-
     @classmethod
     def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
         data_gen.run()
+
+    def setUp(self):
+        pass
 
     def test_email_sync(self):
         email_results = create_email(3)
@@ -63,4 +52,4 @@ class EmailTest(APITestCase):
     #
     #         self.assertEqual(True, False)
 
-        # group_results.get(on_message=on_raw_message)
+    # group_results.get(on_message=on_raw_message)

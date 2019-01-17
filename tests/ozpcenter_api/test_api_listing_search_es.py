@@ -1,32 +1,25 @@
-"""
-Tests for Listing Elasticsearch Search endpoints
-
-/api/listing/essearch
-"""
 import logging
 
 from django.test import override_settings
-
 from rest_framework import status
-from tests.ozp.cases import APITestCase
 
-from ozpcenter import model_access as generic_model_access
-from ozpcenter.scripts import sample_data_generator as data_gen
-from tests.ozpcenter.data_util import ListingFile
-from tests.ozpcenter.helper import APITestHelper
-from tests.ozpcenter.helper import ExceptionUnitTestHelper
 from ozpcenter.api.listing import model_access_es
 from ozpcenter.api.listing.elasticsearch_util import elasticsearch_factory
+from ozpcenter.scripts import sample_data_generator as data_gen
+from tests.ozp.cases import APITestCase
+from tests.ozpcenter.data_util import ListingFile
+from tests.ozpcenter.helper import APITestHelper
 
 
 @override_settings(ES_ENABLED=False)
 class ListingESSearchApiTest(APITestCase):
 
+    @classmethod
+    def setUpTestData(cls):
+        data_gen.run()
+
     @override_settings(ES_ENABLED=True)
     def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
         self.error_string = None
         self.es_failed = False
         try:
@@ -39,20 +32,10 @@ class ListingESSearchApiTest(APITestCase):
             logging.getLogger('elasticsearch').setLevel(logging.CRITICAL)
             model_access_es.bulk_reindex()
 
-    @classmethod
-    def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
-        data_gen.run()
-
     @override_settings(ES_ENABLED=True)
     def test_essearch_categories_single_with_space(self):
-        """
-        test_essearch_categories_single_with_space
-        TODO: Iterate through all categories in categories.yaml file, Deal with Private apps
-        TODO: TEST listing_title = Newspaper when is_private = True
-        """
+        # TODO: Iterate through all categories in categories.yaml file, Deal with Private apps
+        # TODO: TEST listing_title = Newspaper when is_private = True
         if self.es_failed:
             self.skipTest('Elasticsearch is not currently up: {}'.format(self.error_string))
 
@@ -62,17 +45,14 @@ class ListingESSearchApiTest(APITestCase):
 
         titles = sorted([i['title'] for i in response.data['results']])
         listings_from_file = ListingFile.filter_listings(is_enabled=True,
-                                        approval_status='APPROVED',
-                                        categories__in=['Health and Fitness'])
+                                                         approval_status='APPROVED',
+                                                         categories__in=['Health and Fitness'])
         sorted_listings_from_file = sorted([listing['title'] for listing in listings_from_file])
         self.assertEqual(titles, sorted_listings_from_file)
 
     @override_settings(ES_ENABLED=True)
     def test_essearch_categories_multiple_with_space(self):
-        """
-        test_essearch_categories_multiple_with_space
-        TODO: TEST listing_title = Newspaper when is_private = True
-        """
+        # TODO: TEST listing_title = Newspaper when is_private = True
         if self.es_failed:
             self.skipTest('Elasticsearch is not currently up: {}'.format(self.error_string))
         url = '/api/listings/essearch/?category=Health and Fitness&category=Communication'
@@ -80,11 +60,12 @@ class ListingESSearchApiTest(APITestCase):
 
         titles = sorted([i['title'] for i in response.data['results']])
         listings_from_file = ListingFile.filter_listings(is_enabled=True,
-                                        approval_status='APPROVED',
-                                        categories__in=['Health and Fitness', 'Communication'])
+                                                         approval_status='APPROVED',
+                                                         categories__in=['Health and Fitness', 'Communication'])
         sorted_listings_from_file = sorted([listing['title'] for listing in listings_from_file])
 
         self.assertEqual(titles, sorted_listings_from_file)
+
     #
     # def test_search_text(self):
     #     user = generic_model_access.get_profile('wsmith').user
@@ -126,10 +107,7 @@ class ListingESSearchApiTest(APITestCase):
 
     @override_settings(ES_ENABLED=True)
     def test_essearch_filter_type(self):
-        """
-        test_essearch_filter_type
-        TODO: Iterate through all Listings types in listings_types.yaml file, Deal with Private apps
-        """
+        # TODO: Iterate through all Listings types in listings_types.yaml file, Deal with Private apps
         if self.es_failed:
             self.skipTest('Elasticsearch is not currently up: {}'.format(self.error_string))
 
@@ -138,8 +116,8 @@ class ListingESSearchApiTest(APITestCase):
 
         titles = sorted([i['title'] for i in response.data['results']])
         listings_from_file = ListingFile.filter_listings(is_enabled=True,
-                                        approval_status='APPROVED',
-                                        listing_type='Web Application')
+                                                         approval_status='APPROVED',
+                                                         listing_type='Web Application')
         sorted_listings_from_file = sorted([listing['title'] for listing in listings_from_file])
         self.assertEqual(titles, sorted_listings_from_file)
 
@@ -153,10 +131,10 @@ class ListingESSearchApiTest(APITestCase):
 
         titles = sorted([i['title'] for i in response.data['results']])
         expected_listing = ['Air Mail', 'Bread Basket', 'Chart Course', 'Chatter Box', 'Clipboard',
-            'Deadpool', 'Desktop Virtualization', 'Diamond', 'Dinosaur', 'Dragons', 'FrameIt',
-            'Harley-Davidson CVO', 'Hatch Latch', 'JotSpot', 'LocationAnalyzer', 'LocationLister',
-            'LocationViewer', 'Mini Dachshund', 'Monkey Finder', 'Personal Computer', 'Ruby on Rails',
-            'Skybox', 'Smart Phone', 'Taxonomy Classifier']
+                            'Deadpool', 'Desktop Virtualization', 'Diamond', 'Dinosaur', 'Dragons', 'FrameIt',
+                            'Harley-Davidson CVO', 'Hatch Latch', 'JotSpot', 'LocationAnalyzer', 'LocationLister',
+                            'LocationViewer', 'Mini Dachshund', 'Monkey Finder', 'Personal Computer', 'Ruby on Rails',
+                            'Skybox', 'Smart Phone', 'Taxonomy Classifier']
 
         self.assertEqual(titles, expected_listing)
 
@@ -170,8 +148,8 @@ class ListingESSearchApiTest(APITestCase):
 
         titles = sorted([i['title'] for i in response.data['results']])
         listings_from_file = ListingFile.filter_listings(is_enabled=True,
-                                        approval_status='APPROVED',
-                                        tags__in=['demo_tag'])
+                                                         approval_status='APPROVED',
+                                                         tags__in=['demo_tag'])
         sorted_listings_from_file = sorted([listing['title'] for listing in listings_from_file])
 
         self.assertEqual(titles, sorted_listings_from_file)
@@ -191,11 +169,7 @@ class ListingESSearchApiTest(APITestCase):
     #
     @override_settings(ES_ENABLED=True)
     def test_essearch_is_enable(self):
-        """
-        test_essearch_is_enable
-
-        Elasticsearch Search should be independent from database(sqlite/postgresql)
-        """
+        # Elasticsearch Search should be independent from database(sqlite/postgresql)
         if self.es_failed:
             self.skipTest('Elasticsearch is not currently up: {}'.format(self.error_string))
 
@@ -205,8 +179,8 @@ class ListingESSearchApiTest(APITestCase):
         titles_ids = [{'title': record.get('title'), 'id': record.get('id')} for record in response.data['results']]
         titles = sorted([i['title'] for i in titles_ids])
         expected_titles = ['Air Mail', 'Bread Basket', 'Chart Course', 'Chatter Box', 'Clipboard',
-            'FrameIt', 'Hatch Latch', 'JotSpot', 'LocationAnalyzer', 'LocationLister',
-            'LocationViewer', 'Monkey Finder', 'Skybox', 'Smart Phone', 'Taxonomy Classifier']
+                           'FrameIt', 'Hatch Latch', 'JotSpot', 'LocationAnalyzer', 'LocationLister',
+                           'LocationViewer', 'Monkey Finder', 'Skybox', 'Smart Phone', 'Taxonomy Classifier']
 
         self.assertEqual(titles, expected_titles)
 
@@ -228,10 +202,11 @@ class ListingESSearchApiTest(APITestCase):
         titles_ids = [{'title': record.get('title'), 'id': record.get('id')} for record in response.data['results']]
         titles = sorted([i['title'] for i in titles_ids])
         expected_titles = ['Bread Basket', 'Chart Course', 'Chatter Box', 'Clipboard',
-            'FrameIt', 'Hatch Latch', 'JotSpot', 'LocationAnalyzer', 'LocationLister',
-            'LocationViewer', 'Monkey Finder', 'Skybox', 'Smart Phone', 'Taxonomy Classifier']
+                           'FrameIt', 'Hatch Latch', 'JotSpot', 'LocationAnalyzer', 'LocationLister',
+                           'LocationViewer', 'Monkey Finder', 'Skybox', 'Smart Phone', 'Taxonomy Classifier']
 
         self.assertEqual(titles, expected_titles)
+
     #
     # def test_search_agency(self):
     #     user = generic_model_access.get_profile('wsmith').user

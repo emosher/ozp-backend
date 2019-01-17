@@ -1,31 +1,19 @@
-"""
-library tests
-"""
-from django.test import override_settings
 from django.test import TestCase
+from django.test import override_settings
 
-from ozpcenter.scripts import sample_data_generator as data_gen
 import ozpcenter.api.library.model_access as model_access
-import ozpcenter.model_access as generic_model_access
-from ozpcenter import errors
-from ozpcenter import models
+from ozpcenter.scripts import sample_data_generator as data_gen
 
 
 @override_settings(ES_ENABLED=False)
 class LibraryTest(TestCase):
 
-    def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
-        pass
-
     @classmethod
     def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
         data_gen.run()
+
+    def setUp(self):
+        pass
 
     def test_get_all_library_entries(self):
         results = model_access.get_all_library_entries()

@@ -6,35 +6,28 @@ examples for how to test various things
 """
 import json
 
-from django.test import override_settings
-from django.test import TestCase
-from django.db.utils import IntegrityError
-from django.db.utils import DataError
 from django.db import transaction
+from django.db.utils import DataError
+from django.db.utils import IntegrityError
+from django.test import TestCase
+from django.test import override_settings
 
-from ozpcenter import models
 import tests.ozpcenter.factories as f
+from ozpcenter import models
 
 
 @override_settings(ES_ENABLED=False)
 class ProfileTest(TestCase):
 
-    def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
-        pass
-
     @classmethod
     def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
         f.GroupFactory.create(name='USER')
         f.GroupFactory.create(name='ORG_STEWARD')
         f.GroupFactory.create(name='APPS_MALL_STEWARD')
-        f.ProfileFactory.create(user__username='bob', display_name='Bob B',
-            user__email='bob@bob.com', dn='bob')
+        f.ProfileFactory.create(user__username='bob',
+                                display_name='Bob B',
+                                user__email='bob@bob.com',
+                                dn='bob')
         f.ProfileFactory.create(user__username='alice')
         unclass = 'UNCLASSIFIED'
 
@@ -48,6 +41,9 @@ class ProfileTest(TestCase):
 
         f.AgencyFactory.create(title='Three Letter Agency', short_name='TLA',
             icon=icon)
+
+    def setUp(self):
+        pass
 
     def test_unique_constraints(self):
         # example of how to test that exceptions are raised:

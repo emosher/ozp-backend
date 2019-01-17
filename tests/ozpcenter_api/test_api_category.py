@@ -1,25 +1,23 @@
-"""
-Tests for category endpoints
-"""
 from django.test import override_settings
-from tests.ozp.cases import APITestCase
 
-from tests.ozpcenter.helper import APITestHelper
-from ozpcenter.utils import shorthand_dict
-from tests.ozpcenter.helper import ExceptionUnitTestHelper
-from ozpcenter.scripts import sample_data_generator as data_gen
-from ozpcenter import models
 import ozpcenter.api.listing.model_access as listing_model_access
 import ozpcenter.model_access as generic_model_access
+from ozpcenter import models
+from ozpcenter.scripts import sample_data_generator as data_gen
+from ozpcenter.utils import shorthand_dict
+from tests.ozp.cases import APITestCase
+from tests.ozpcenter.helper import APITestHelper
+from tests.ozpcenter.helper import ExceptionUnitTestHelper
 
 
 @override_settings(ES_ENABLED=False)
 class CategoryApiTest(APITestCase):
 
+    @classmethod
+    def setUpTestData(cls):
+        data_gen.run()
+
     def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
         self.expected_categories = [
             '(description:Accessories Description,title:Accessories)',
             '(description:Things made of paper,title:Books and Reference)',
@@ -38,23 +36,16 @@ class CategoryApiTest(APITestCase):
             '(description:Tools and Utilities,title:Tools)',
             '(description:Get the temperature,title:Weather)']
 
-    @classmethod
-    def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
-        data_gen.run()
-
     def test_get_categories_list(self):
         url = '/api/category/'
         response = APITestHelper.request(self, url, 'GET', username='wsmith', status_code=200)
-        shorten_data = shorthand_dict(response.data, exclude_keys=['id'])
+        shorten_data = shorthand_dict(response.data, exclude_keys=['id', 'import_metadata'])
         self.assertListEqual(shorten_data, self.expected_categories)
 
     def test_get_category(self):
         url = '/api/category/1/'
         response = APITestHelper.request(self, url, 'GET', username='wsmith', status_code=200)
-        shorten_data = shorthand_dict(response.data, exclude_keys=['id'])
+        shorten_data = shorthand_dict(response.data, exclude_keys=['id', 'import_metadata'])
 
         expected_results = '(description:Accessories Description,title:Accessories)'
         self.assertEqual(shorten_data, expected_results)
@@ -68,7 +59,7 @@ class CategoryApiTest(APITestCase):
         url = '/api/category/'
         data = {'title': 'new category', 'description': 'category description'}
         response = APITestHelper.request(self, url, 'POST', data=data, username='bigbrother', status_code=201)
-        shorten_data = shorthand_dict(response.data, exclude_keys=['id'])
+        shorten_data = shorthand_dict(response.data, exclude_keys=['id', 'import_metadata'])
 
         expected_results = '(description:category description,title:new category)'
         self.assertEqual(shorten_data, expected_results)
@@ -86,7 +77,7 @@ class CategoryApiTest(APITestCase):
         url = '/api/category/1/'
         data = {'title': 'updated category', 'description': 'updated description'}
         response = APITestHelper.request(self, url, 'PUT', data=data, username='bigbrother', status_code=200)
-        shorten_data = shorthand_dict(response.data, exclude_keys=['id'])
+        shorten_data = shorthand_dict(response.data, exclude_keys=['id', 'import_metadata'])
 
         expected_results = '(description:updated description,title:updated category)'
         self.assertEqual(shorten_data, expected_results)
@@ -105,7 +96,7 @@ class CategoryApiTest(APITestCase):
         url = '/api/category/'
         data = {'title': 'AAA new category', 'description': 'category description'}
         response = APITestHelper.request(self, url, 'POST', data=data, username='bigbrother', status_code=201)
-        shorten_data = shorthand_dict(response.data, exclude_keys=['id'])
+        shorten_data = shorthand_dict(response.data, exclude_keys=['id', 'import_metadata'])
 
         expected_results = '(description:category description,title:AAA new category)'
         self.assertEqual(shorten_data, expected_results)
@@ -113,7 +104,7 @@ class CategoryApiTest(APITestCase):
         # GET request
         url = '/api/category/'
         response = APITestHelper.request(self, url, 'GET', username='wsmith', status_code=200)
-        shorten_data = shorthand_dict(response.data, exclude_keys=['id'])
+        shorten_data = shorthand_dict(response.data, exclude_keys=['id', 'import_metadata'])
         expected_results = ['(description:category description,title:AAA new category)'] + self.expected_categories
         self.assertListEqual(shorten_data, expected_results)
 
@@ -144,22 +135,22 @@ class CategoryApiTest(APITestCase):
 
     def test_GET_bulk_category_listings_apps_mall_steward(self):
         expected_results = ['apocalypse',
-                        'applied_ethics_inc.',
-                        'beast',
-                        'blink',
-                        'cyclops',
-                        'deadpool',
-                        'diamond',
-                        'harley-davidson_cvo',
-                        'iron_man',
-                        'jean_grey',
-                        'magneto',
-                        'rogue',
-                        'ruby',
-                        'sapphire',
-                        'saturn',
-                        'uranus',
-                        'wolverine']
+                            'applied_ethics_inc.',
+                            'beast',
+                            'blink',
+                            'cyclops',
+                            'deadpool',
+                            'diamond',
+                            'harley-davidson_cvo',
+                            'iron_man',
+                            'jean_grey',
+                            'magneto',
+                            'rogue',
+                            'ruby',
+                            'sapphire',
+                            'saturn',
+                            'uranus',
+                            'wolverine']
 
         # get list of listings containing category id {7}
         url = '/api/category/7/listing/'
@@ -184,15 +175,15 @@ class CategoryApiTest(APITestCase):
         # The listing categories in these test case all have two or more category associations
 
         expected_results = ['apocalypse',
-                        'beast',
-                        'blink',
-                        'cyclops',
-                        'deadpool',
-                        'iron_man',
-                        'jean_grey',
-                        'magneto',
-                        'rogue',
-                        'wolverine']
+                            'beast',
+                            'blink',
+                            'cyclops',
+                            'deadpool',
+                            'iron_man',
+                            'jean_grey',
+                            'magneto',
+                            'rogue',
+                            'wolverine']
 
         # get list of listings containing category id {7} for this owner.
         url = '/api/category/7/listing/'
@@ -233,7 +224,7 @@ class CategoryApiTest(APITestCase):
                          {"id": 100, "categories": [{"title": "Finance"}, {"title": "Weather"}]},
                          {"id": 135, "categories": [{"title": "Finance"}, {"title": "Weather"}]},
                          {"id": 187, "categories": [{"title": "Finance"}, {"title": "Weather"}]}
-                        ]
+                         ]
 
         # test case: remove a category - Finance (id = 7)
         data_removed = [{"id": 6, "categories": [{"title": "Weather"}]},
@@ -272,7 +263,7 @@ class CategoryApiTest(APITestCase):
                           {"id": 100, "categories": [{"title": "Accessories"}, {"title": "Weather"}]},
                           {"id": 135, "categories": [{"title": "Accessories"}, {"title": "Weather"}]},
                           {"id": 187, "categories": [{"title": "Accessories"}, {"title": "Finance"}]}
-                        ]
+                          ]
 
         # retrieve starting category listings for this owner
         url = '/api/category/7/listing/'

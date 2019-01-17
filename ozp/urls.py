@@ -30,6 +30,11 @@ if hasattr(settings, "CAS_ENABLED") and settings.CAS_ENABLED:
         url(r'^logout/$', django_cas_ng.views.logout, name='cas_ng_logout'),
     ]
 
+if settings.HEALTH_CHECK_ENABLED:
+    urlpatterns += [
+        url(r'^health_check/$', views.health_check, name="health_check")
+    ]
+
 # In debug mode, serve the media and static resources with the django web server
 # https://docs.djangoproject.com/en/1.11/howto/static-files/#serving-static-files-during-development
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

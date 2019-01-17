@@ -1,6 +1,3 @@
-"""
-Tests for listing endpoints
-"""
 from django.test import override_settings
 from rest_framework import status
 from tests.ozp.cases import APITestCase
@@ -16,18 +13,12 @@ from tests.ozpcenter.helper import ExceptionUnitTestHelper
 @override_settings(ES_ENABLED=False)
 class ListingReviewApiTest(APITestCase):
 
-    def setUp(self):
-        """
-        setUp is invoked before each test method
-        """
-        pass
-
     @classmethod
     def setUpTestData(cls):
-        """
-        Set up test data for the whole TestCase (only run once for the TestCase)
-        """
         data_gen.run()
+
+    def setUp(self):
+        pass
 
     def test_get_reviews(self):
         air_mail_id = models.Listing.objects.get(title='Air Mail').id
