@@ -16,7 +16,7 @@ coreapi==2.3.3
 coreschema==0.0.4
 coverage==4.4.2
 decorator==4.2.1
-Django==1.11.5
+Django==2.2.18
 django-cors-headers==2.1.0
 django-enumfield==1.2.1
 django-extensions==1.9.1
@@ -43,7 +43,7 @@ ipython-genutils==0.2.0
 ipywidgets==7.1.1
 itypes==1.1.0
 jedi==0.11.1
-Jinja2==2.10
+Jinja2==2.11.3
 jmespath==0.9.3
 jsonschema==2.6.0
 jupyter==1.0.0
