@@ -86,7 +86,7 @@ packaging==16.8
   - pyparsing [required: Any, installed: 2.2.0]
   - six [required: Any, installed: 1.11.0]
 pep8==1.7.0
-Pillow==4.2.1
+Pillow==8.1.1
   - olefile [required: Any, installed: 0.44]
 pipdeptree==0.10.1
   - pip [required: >=6.0.0, installed: 9.0.1]
