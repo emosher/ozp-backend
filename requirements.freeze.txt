@@ -25,7 +25,7 @@ django-filter==1.0.4
 django-redis==4.8.0
 django-rest-swagger==2.1.2
 django-storages==1.6.5
-djangorestframework==3.6.4
+djangorestframework==3.11.2
 djangorestframework-jwt==1.11.0
 docutils==0.14
 drf-nested-routers==0.90.0
@@ -70,7 +70,7 @@ pathtools==0.1.2
 pep8==1.7.0
 pexpect==4.3.1
 pickleshare==0.7.4
-Pillow==4.2.1
+Pillow==8.2.0
 pluggy==0.6.0
 prompt-toolkit==1.0.15
 psycopg2==2.7.3.1
