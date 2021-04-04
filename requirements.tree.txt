@@ -86,7 +86,7 @@ packaging==16.8
   - pyparsing [required: Any, installed: 2.2.0]
   - six [required: Any, installed: 1.11.0]
 pep8==1.7.0
-Pillow==4.2.1
+Pillow==8.2.0
   - olefile [required: Any, installed: 0.44]
 pipdeptree==0.10.1
   - pip [required: >=6.0.0, installed: 9.0.1]
@@ -112,3 +112,4 @@ pytest-xdist==1.20.1
       - py [required: >=1.4.33, installed: 1.4.34]
       - setuptools [required: Any, installed: 38.2.4]
 wheel==0.30.0
+djangorestframework>=3.11.2 # not directly required, pinned by Snyk to avoid a vulnerability
