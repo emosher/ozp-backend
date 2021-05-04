@@ -112,3 +112,4 @@ pytest-xdist==1.20.1
       - py [required: >=1.4.33, installed: 1.4.34]
       - setuptools [required: Any, installed: 38.2.4]
 wheel==0.30.0
+django>=2.2.21 # not directly required, pinned by Snyk to avoid a vulnerability
